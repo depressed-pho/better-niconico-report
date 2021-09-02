@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "Node",
+        "noImplicitAny": true,
+        "noEmitOnError": true,
+        "sourceMap": true,
+        "strict": true,
+        "target": "ES2017",
+        "lib": ["ES2017","dom", "dom.iterable"],
+        "typeRoots": ["node_modules/@types", "node_modules/web-ext-types/"],
+        "experimentalDecorators": true,
+        "alwaysStrict": true,
+        "baseUrl": "src/",
+        "paths": {
+            "@src/*": ["*"]
+        }
+    }
+}

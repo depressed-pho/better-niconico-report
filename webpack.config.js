@@ -20,9 +20,14 @@ const firefoxBin = (() => {
 module.exports = {
     mode: 'none',
     entry: {
+        background: './src/background.ts'
     },
     output: {
         path: path.resolve(__dirname, 'dist')
+    },
+    devtool: "inline-source-map", // Enable sourcemaps for debugging webpack's output.
+    resolve: {
+        extensions: [".ts", ".js"]
     },
     plugins: [
         new CleanWebpackPlugin(),
@@ -40,7 +45,13 @@ module.exports = {
         }),
         new WebExtPlugin({
             sourceDir: path.resolve(__dirname, 'dist'),
+            browserConsole: true,
             firefox: firefoxBin
         })
-    ]
+    ],
+    module: {
+        rules: [
+            { test: /\.tsx?$/, loader: 'ts-loader' }
+        ]
+    }
 };
