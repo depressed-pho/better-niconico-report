@@ -32,7 +32,10 @@ module.exports = {
     },
     devtool: "inline-source-map", // Enable sourcemaps for debugging webpack's output.
     resolve: {
-        extensions: [".ts", ".js"]
+        extensions: [".ts", ".js"],
+        alias: {
+            'nicovideo': path.resolve(__dirname, 'lib')
+        }
     },
     plugins: [
         new CleanWebpackPlugin(),

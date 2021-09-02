@@ -12,6 +12,12 @@ module.exports = {
         "default_icon": "assets/icon.svg",
         "default_title": "Better Niconico Report"
     },
+    permissions: [
+        "https://account.nicovideo.jp/api/*",
+        "https://public.api.nicovideo.jp/*",
+        "https://www.nicovideo.jp/*",
+        "cookies"
+    ],
     browser_specific_settings: {
         gecko: {
             id: "better-niconico-report@cielonegro.org"

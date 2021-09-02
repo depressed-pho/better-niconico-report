@@ -5,14 +5,15 @@
         "noEmitOnError": true,
         "sourceMap": true,
         "strict": true,
+        "allowSyntheticDefaultImports": true,
         "target": "ES2017",
         "lib": ["ES2017","dom", "dom.iterable"],
         "typeRoots": ["node_modules/@types", "node_modules/web-ext-types/"],
         "experimentalDecorators": true,
         "alwaysStrict": true,
-        "baseUrl": "src/",
+        "baseUrl": ".",
         "paths": {
-            "@src/*": ["*"]
+            "nicovideo/*": ["lib/*"]
         }
     }
 }

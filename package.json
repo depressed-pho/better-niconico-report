@@ -26,8 +26,6 @@
     "css-loader": "^6.2.0",
     "download": "^8.0.0",
     "express": "^4.17.1",
-    "foundation-sites": "^6.7.1",
-    "jquery": "^3.6.0",
     "mini-css-extract-plugin": "^2.2.2",
     "postcss-loader": "^6.1.1",
     "safe-compare": "^1.1.4",
@@ -39,8 +37,13 @@
     "web-ext-types": "^3.2.1",
     "webpack": "^5.51.1",
     "webpack-cli": "^4.8.0",
-    "webpack-extension-manifest-plugin": "^0.8.0",
-    "what-input": "^5.2.10"
+    "webpack-extension-manifest-plugin": "^0.8.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "baconjs": "^3.0.17",
+    "form-urlencoded": "^6.0.4",
+    "foundation-sites": "^6.7.1",
+    "jquery": "^3.6.0",
+    "what-input": "^5.2.10"
+  }
 }
