@@ -1,6 +1,7 @@
 const path = require('path');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebPackPlugin = require("copy-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const WebpackExtensionManifestPlugin = require('webpack-extension-manifest-plugin');
 const WebExtPlugin = require('web-ext-plugin');
 
@@ -20,7 +21,11 @@ const firefoxBin = (() => {
 module.exports = {
     mode: 'none',
     entry: {
-        background: './src/background.ts'
+        background: "./src/background.ts",
+        report: {
+            import: "./src/pages/report/report.ts",
+            filename: "assets/pages/[name]/[name].js"
+        }
     },
     output: {
         path: path.resolve(__dirname, 'dist')
@@ -34,8 +39,17 @@ module.exports = {
         new CopyWebPackPlugin({
             patterns: [
                 { from: "assets", to: "assets" },
-                { from: "pages" , to: "pages"  },
+                {
+                    from: "src/pages",
+                    to: "assets/pages",
+                    filter: async (path) => {
+                        return /\.html$/.test(path);
+                    }
+                },
             ]
+        }),
+        new MiniCssExtractPlugin({
+            filename: "assets/pages/[name]/[name].css"
         }),
         new WebpackExtensionManifestPlugin({
             config: 'src/baseManifest.js',
@@ -52,7 +66,16 @@ module.exports = {
     ],
     module: {
         rules: [
-            { test: /\.tsx?$/, loader: 'ts-loader' }
+            { test: /\.tsx?$/, loader: 'ts-loader' },
+            {
+                test: /\.(sa|sc|c)ss$/,
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    "css-loader",
+                    "postcss-loader",
+                    "sass-loader"
+                ]
+            }
         ]
     }
 };

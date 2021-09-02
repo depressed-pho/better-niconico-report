@@ -3,7 +3,7 @@
  * existing one.
  */
 async function navbarIconClicked() {
-    const URL = browser.runtime.getURL("/pages/report/report.html");
+    const URL    = browser.runtime.getURL("/assets/pages/report/report.html");
     const result = await browser.tabs.query({
         currentWindow: true,
         url: URL
