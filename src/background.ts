@@ -1,6 +1,20 @@
-/* Handle the click event on the navigation bar icon.
+/* Handle the click event on the navigation bar icon. Open the report
+ * page in a new tab if it's not already open, otherwise activate an
+ * existing one.
  */
-function navbarIconClicked() {
-    console.log("clicked!");
+async function navbarIconClicked() {
+    const URL = browser.runtime.getURL("/pages/report/report.html");
+    const result = await browser.tabs.query({
+        currentWindow: true,
+        url: URL
+    });
+    if (result.length > 0) {
+        await browser.tabs.update(result[0].id, {active: true});
+    }
+    else {
+        await browser.tabs.create({
+            url: URL
+        });
+    }
 }
 browser.browserAction.onClicked.addListener(navbarIconClicked);

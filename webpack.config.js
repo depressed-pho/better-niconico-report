@@ -33,7 +33,8 @@ module.exports = {
         new CleanWebpackPlugin(),
         new CopyWebPackPlugin({
             patterns: [
-                { from: "assets", to: "assets" }
+                { from: "assets", to: "assets" },
+                { from: "pages" , to: "pages"  },
             ]
         }),
         new WebpackExtensionManifestPlugin({
@@ -45,7 +46,7 @@ module.exports = {
         }),
         new WebExtPlugin({
             sourceDir: path.resolve(__dirname, 'dist'),
-            browserConsole: true,
+            browserConsole: false,
             firefox: firefoxBin
         })
     ],
