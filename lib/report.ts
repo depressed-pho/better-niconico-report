@@ -95,6 +95,7 @@ function parseAction(trigger: string): Action {
             return "advertised";
 
         case "program.live_user_program_reserve":
+        case "program.live_user_program_video_live_reserve":
             return "reserved-broadcast";
 
         case "program.live_channel_program_onairs":

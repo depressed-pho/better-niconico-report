@@ -15,8 +15,7 @@ module.exports = {
     permissions: [
         "https://account.nicovideo.jp/api/*",
         "https://public.api.nicovideo.jp/*",
-        "https://www.nicovideo.jp/*",
-        "cookies"
+        "https://www.nicovideo.jp/*"
     ],
     browser_specific_settings: {
         gecko: {
