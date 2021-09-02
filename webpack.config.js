@@ -1,4 +1,6 @@
 const path = require('path');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const CopyWebPackPlugin = require("copy-webpack-plugin");
 const WebpackExtensionManifestPlugin = require('webpack-extension-manifest-plugin');
 const WebExtPlugin = require('web-ext-plugin');
 
@@ -19,7 +21,16 @@ module.exports = {
     mode: 'none',
     entry: {
     },
+    output: {
+        path: path.resolve(__dirname, 'dist')
+    },
     plugins: [
+        new CleanWebpackPlugin(),
+        new CopyWebPackPlugin({
+            patterns: [
+                { from: "assets", to: "assets" }
+            ]
+        }),
         new WebpackExtensionManifestPlugin({
             config: 'src/baseManifest.js',
             pkgJsonProps: [
