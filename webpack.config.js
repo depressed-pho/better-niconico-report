@@ -62,7 +62,7 @@ module.exports = {
             ]
         }),
         new WebExtPlugin({
-            sourceDir: path.resolve(__dirname, 'dist'),
+            sourceDir: path.resolve(__dirname, "dist"),
             browserConsole: false,
             firefox: firefoxBin
         })
