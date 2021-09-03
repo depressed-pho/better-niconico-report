@@ -1,0 +1,51 @@
+$user-icon-width: 40px;
+$user-icon-height: 40px;
+
+$object-thumb-width: 112px;
+$object-thumb-height: 63px;
+
+.bnr-loading-progress {
+    width: 5rem;
+
+    /* Center it vertically */
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.bnr-reports {
+    padding-top: 1rem;
+    overflow-y: auto;
+
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
+}
+
+.bnr-user-icon {
+    width: $user-icon-width;
+    height: $user-icon-height;
+}
+
+.bnr-report-body {
+    padding-left: calc(#{$user-icon-width} + 0.4em);
+}
+
+.bnr-report-title {
+    font-size: 85%;
+}
+
+.bnr-object-thumb {
+    width: $object-thumb-width;
+    height: $object-thumb-height;
+    margin-right: 0.9em;
+}
+
+.bnr-object-type {
+    color: white;
+    background-color: black;
+    padding: 4px 12px;
+    border-radius: 2px;
+    font-size: 80%;
+}

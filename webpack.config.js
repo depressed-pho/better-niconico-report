@@ -28,7 +28,8 @@ module.exports = {
         }
     },
     output: {
-        path: path.resolve(__dirname, 'dist')
+        path: path.resolve(__dirname, "dist"),
+        assetModuleFilename: "assets/[name][ext]"
     },
     devtool: "inline-source-map", // Enable sourcemaps for debugging webpack's output.
     resolve: {
@@ -70,6 +71,10 @@ module.exports = {
     module: {
         rules: [
             { test: /\.tsx?$/, loader: 'ts-loader' },
+            {
+                test: /\.(eot|svg|ttf|woff)$/i,
+                type: 'asset/resource'
+            },
             {
                 test: /\.(sa|sc|c)ss$/,
                 use: [

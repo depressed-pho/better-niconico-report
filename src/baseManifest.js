@@ -13,7 +13,7 @@ module.exports = {
         "default_title": "Better Niconico Report"
     },
     permissions: [
-        "https://account.nicovideo.jp/api/*",
+        "https://account.nicovideo.jp/*",
         "https://public.api.nicovideo.jp/*",
         "https://www.nicovideo.jp/*"
     ],

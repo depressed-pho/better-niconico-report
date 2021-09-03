@@ -1,12 +1,16 @@
+import 'foundation-sites';
+import * as $ from 'jquery';
 import '../pages.scss';
+import './report.scss';
 import { UnauthorizedError } from 'nicovideo/errors';
-import { getReport } from 'nicovideo/report';
+import { ReportEntry, getReport } from 'nicovideo/report';
 import { login } from 'nicovideo/auth';
 
 window.addEventListener('DOMContentLoaded', async () => {
+    $(document).foundation();
     /*
     try {
-        await getReport();
+        console.log(await getReport());
     }
     catch (e) {
         if (e instanceof UnauthorizedError) {

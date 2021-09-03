@@ -1,5 +1,6 @@
 @import "_settings.scss";
 @import "~foundation-sites/scss/foundation.scss";
+@import "~@icon/foundation-icons/foundation-icons.css";
 
 // Global styles
 @include foundation-global-styles;
@@ -17,6 +18,7 @@
 //@include foundation-close-button;
 //@include foundation-label;
 //@include foundation-progress-bar;
+@include foundation-progress-element;
 //@include foundation-slider;
 //@include foundation-switch;
 //@include foundation-table;
@@ -25,7 +27,7 @@
 //@include foundation-badge;
 //@include foundation-breadcrumbs;
 //@include foundation-callout;
-//@include foundation-card;
+@include foundation-card;
 //@include foundation-dropdown;
 //@include foundation-pagination;
 //@include foundation-tooltip;
@@ -40,10 +42,10 @@
 
 // Menu-based containers
 @include foundation-menu;
-//@include foundation-menu-icon;
+@include foundation-menu-icon;
 //@include foundation-accordion-menu;
 //@include foundation-drilldown-menu;
-//@include foundation-dropdown-menu;
+@include foundation-dropdown-menu;
 
 // Layout components
 //@include foundation-off-canvas;
