@@ -1,7 +1,13 @@
 import formurlencoded from 'form-urlencoded';
 import { UnauthorizedError } from 'nicovideo/errors';
 
-export async function login(user: string, password: string): Promise<void> {
+export interface Credentials {
+    /// Email address or phone number
+    user: string,
+    password: string
+}
+
+export async function signIn(creds: Credentials): Promise<void> {
     const URL = "https://account.nicovideo.jp/api/v1/login?site=niconico&mail_or_tel=1";
     const res = await fetch(URL, {
         method: "POST",
@@ -12,8 +18,8 @@ export async function login(user: string, password: string): Promise<void> {
         },
         body: formurlencoded({
             "current_form": "login_form",
-            "mail_tel": user,
-            "password": password,
+            "mail_tel": creds.user,
+            "password": creds.password,
             "login__submit": "Login"
         })
     });

@@ -83,6 +83,17 @@ module.exports = {
                     "postcss-loader",
                     "sass-loader"
                 ]
+            },
+            {
+                test: /\.html$/i,
+                use: [
+                    {
+                        loader: "html-loader",
+                        options: {
+                            esModule: true
+                        }
+                    }
+                ]
             }
         ]
     }

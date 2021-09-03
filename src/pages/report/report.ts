@@ -4,7 +4,7 @@ import '../pages.scss';
 import './report.scss';
 import { UnauthorizedError } from 'nicovideo/errors';
 import { ReportEntry, getReport } from 'nicovideo/report';
-import { login } from 'nicovideo/auth';
+import { signIn } from '../sign-in/sign-in';
 
 function appendEntry(entry: ReportEntry) {
     const tmpl = document.querySelector<HTMLTemplateElement>("template[data-for='report']")!;
@@ -52,6 +52,7 @@ function appendEntry(entry: ReportEntry) {
 
 window.addEventListener('DOMContentLoaded', async () => {
     $(document).foundation();
+    await signIn();// FIXME: delete this
 
     appendEntry({
         id: "",
