@@ -66,81 +66,73 @@
         <div class="grid-container">
           <div class="grid-y">
 
-            <div class="cell card">
-              <div class="card-section">
-                <!-- A report has a header and a body. -->
-                <div class="grid-y">
-                  <!-- An entry header has a user icon, their name,
-                       and a muting menu. -->
-                  <div class="cell grid-x">
-                    <div class="cell auto">
-                      <a href="https://www.nicovideo.jp/user/64011">
-                        <img class="bnr-user-icon"
-                             src="https://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/6/64011.jpg?1559446191" />
-                        玉ねぎ修字
-                      </a>
-                    </div>
-                    <div class="cell shrink">
-                      <ul class="menu" data-dropdown-menu="">
-                        <li class="is-dropdown-submenu-parent">
-                          <a>
-                            <i class="fi fi-list"></i>
-                          </a>
-                          <ul class="menu">
-                            <li>
-                              <a>Mute these reports...</a>
-                            </li>
-                          </ul>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                  <!-- An entry body has an entry title, timestamp,
-                       thumbnail, an object type, and an object
-                       title. -->
-                  <div class="cell grid-y bnr-report-body">
-                    <!-- Entry title and timestamp -->
+            <template data-for="report">
+              <div class="cell card">
+                <div class="card-section">
+                  <!-- A report has a header and a body. -->
+                  <div class="grid-y">
+                    <!-- An entry header has a user icon, their name,
+                         and a muting menu. -->
                     <div class="cell grid-x">
-                      <div class="cell auto bnr-report-title">
-                        動画を「いいね！」しました
-                      </div>
-                      <div class="cell shrink">
-                        timestamp
-                      </div>
-                    </div>
-                    <!-- Thumbnail and details -->
-                    <div class="cell grid-x">
-                      <!-- Thumbnail -->
-                      <div class="cell shrink">
-                        <a href="https://www.nicovideo.jp/watch/sm38451158?ref=pc_mypage_nicorepo">
-                          <img class="bnr-object-thumb"
-                               src="https://nicovideo.cdn.nimg.jp/thumbnails/38451158/38451158.6981162.M" />
+                      <div class="cell auto">
+                        <a class="bnr-user">
+                          <img class="bnr-user-icon" />
+                          <span class="bnr-user-name"></span>
                         </a>
                       </div>
-                      <!-- Object details -->
-                      <div class="cell auto grid-y">
-                        <!-- Object type -->
-                        <div class="cell">
-                          <span class="bnr-object-type">Video</span>
-                        </div>
-                        <!-- Object title -->
-                        <div class="cell">
-                          <a href="https://www.nicovideo.jp/watch/sm38451158?ref=pc_mypage_nicorepo">
-                            クッキーク六花ー
+                      <div class="cell shrink">
+                        <ul class="menu bnr-muting"
+                            data-disable-hover="true"
+                            data-click-open="true">
+                          <li class="is-dropdown-submenu-parent">
+                            <a>
+                              <i class="fi fi-list"></i>
+                            </a>
+                            <ul class="menu">
+                              <li>
+                                <a>Mute these reports...</a>
+                              </li>
+                            </ul>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                    <!-- An entry body has an entry title, timestamp,
+                         thumbnail, an object type, and an object
+                         title. -->
+                    <div class="cell grid-y bnr-report-body">
+                      <!-- Entry title and timestamp -->
+                      <div class="cell grid-x">
+                        <div class="cell auto bnr-report-title"></div>
+                        <div class="cell shrink bnr-report-timestamp"></div>
+                      </div>
+                      <!-- Thumbnail and details -->
+                      <div class="cell grid-x">
+                        <!-- Thumbnail -->
+                        <div class="cell shrink">
+                          <a class="bnr-object">
+                            <img class="bnr-object-thumb" />
                           </a>
+                        </div>
+                        <!-- Object details -->
+                        <div class="cell auto grid-y">
+                          <!-- Object type -->
+                          <div class="cell">
+                            <span class="bnr-object-type"></span>
+                          </div>
+                          <!-- Object title -->
+                          <div class="cell">
+                            <a class="bnr-object">
+                              <span class="bnr-object-title"></span>
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div class="cell card">
-              <div class="card-section">
-                blah
-              </div>
-            </div>
+            </template>
 
           </div>
         </div>

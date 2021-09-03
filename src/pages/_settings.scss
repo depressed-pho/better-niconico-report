@@ -3,3 +3,10 @@
 $dropdownmenu-arrows: false;
 $topbar-padding: 0.1rem !default;
 $progress-margin-bottom: 0 !default;
+
+.menu a {
+    cursor: pointer;
+}
+.menu li:hover {
+    @extend .is-active;
+}
