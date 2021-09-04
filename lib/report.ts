@@ -13,7 +13,7 @@ export interface ReportChunk {
 }
 
 export interface ReportEntry {
-    id: string,
+    id: ReportID,
     title: string, // Human-readable title of the entry, possibly in HTML.
     timestamp: Date,
     subject: User,

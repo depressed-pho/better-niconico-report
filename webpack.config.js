@@ -29,7 +29,14 @@ module.exports = (env, argv) => {
     };
     const dev = {
         mode: "development",
-        devtool: "eval-cheap-module-source-map"
+        /* We can't use eval-cheap-module-source-map because eval() is
+         * prohibited by default as a CSP restriction. We also don't
+         * want to loosen the CSP just for this. */
+        devtool: "cheap-module-source-map",
+        watchOptions: {
+            // Ignore Emacs auto-save files.
+            ignored: '**/.#*'
+        }
     };
     const common = {
         entry: {
