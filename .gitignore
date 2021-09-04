@@ -1,3 +1,3 @@
 dist
-firefox.core
+*.core
 node_modules

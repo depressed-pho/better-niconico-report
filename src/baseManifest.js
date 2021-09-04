@@ -13,9 +13,13 @@ module.exports = {
         "default_title": "Better Niconico Report"
     },
     permissions: [
+        // To perform an authentication and also follow a redirection
+        // on a failed authentication.
         "https://account.nicovideo.jp/*",
-        "https://public.api.nicovideo.jp/*",
-        "https://www.nicovideo.jp/*"
+        // To follow a redirection on a successful authentication.
+        "https://www.nicovideo.jp/*",
+        // To access the report API.
+        "https://public.api.nicovideo.jp/*"
     ],
     browser_specific_settings: {
         gecko: {
