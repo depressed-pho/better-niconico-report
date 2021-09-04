@@ -7,9 +7,9 @@
     "url": "https://github.com/depressed-pho/better-niconico-report.git"
   },
   "scripts": {
-    "build": "webpack --progress",
+    "build": "webpack --mode=production --progress",
     "clean": "rimraf dist",
-    "watch": "webpack --progress --watch",
+    "watch": "webpack --mode=development --progress --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -41,7 +41,8 @@
     "web-ext-types": "^3.2.1",
     "webpack": "^5.51.1",
     "webpack-cli": "^4.8.0",
-    "webpack-extension-manifest-plugin": "^0.8.0"
+    "webpack-extension-manifest-plugin": "^0.8.0",
+    "webpack-merge": "^5.8.0"
   },
   "dependencies": {
     "@icon/foundation-icons": "^3.0.0-alpha.3",
