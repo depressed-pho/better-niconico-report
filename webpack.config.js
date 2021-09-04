@@ -19,7 +19,7 @@ const firefoxBin = (() => {
 })();
 
 module.exports = {
-    mode: 'none',
+    mode: 'development',
     entry: {
         background: "./src/background.ts",
         report: {

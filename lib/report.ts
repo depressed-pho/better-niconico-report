@@ -5,7 +5,7 @@ export type Action =
     "advertised" | "reserved-broadcast" | "broadcasted" | "got-magic-number" |
     "liked" | "listed" | "uploaded" | "unknown";
 
-export interface ReportEntries {
+export interface ReportChunk {
     newestID: ReportID,
     oldestID: ReportID,
     hasNext: boolean,
@@ -35,7 +35,7 @@ export interface ReportObject {
     thumbURL: string
 }
 
-export async function getReport(skipDownTo?: ReportID): Promise<ReportEntries> {
+export async function getReportChunk(skipDownTo?: ReportID): Promise<ReportChunk> {
     const URL = "https://public.api.nicovideo.jp/v1/timelines/nicorepo/last-1-month/my/pc/entries.json"
         + (skipDownTo ? `?untilId=${skipDownTo}` : '');
     const res = await fetch(URL, {

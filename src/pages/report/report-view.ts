@@ -1,7 +1,7 @@
 import { DropdownMenu } from 'foundation-sites';
 import * as $ from 'jquery';
 import { ReportEntry } from 'nicovideo/report';
-import { AppendEntryEvent, ReportModel } from './report-model';
+import { AppendEntryEvent, ClearEntriesEvent, ReportModel } from './report-model';
 
 /* Invariant: there is at most one instance of this class
  * throughout the lifetime of the report page.
@@ -20,8 +20,11 @@ export class ReportView {
             if (ev instanceof AppendEntryEvent) {
                 this.appendEntry(ev.entry);
             }
+            else if (ev instanceof ClearEntriesEvent) {
+                this.clearEntries();
+            }
             else {
-                throw new Error("Unknown type of ReportEvent: " + ev);
+                throw new Error("Unknown type of ReportEvent: " + ev.constructor.name);
             }
         });
     }
@@ -71,5 +74,14 @@ export class ReportView {
         new DropdownMenu($(menuMuting))
 
         return frag;
+    }
+
+    private clearEntries() {
+        const container = this.tmpl.parentNode!;
+        for (let el of container.children) {
+            if (el.localName != "template") {
+                container.removeChild(el);
+            }
+        }
     }
 }
