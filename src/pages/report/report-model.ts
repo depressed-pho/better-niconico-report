@@ -86,7 +86,25 @@ export class ReportModel {
                     return this.fetchFromServer();
 
                 default:
-                    console.log("the end of report source");// FIXME
+                    return this.config
+                            .intervalBetweenPolling
+                            .first()
+                            .flatMap(interval => {
+                                return Bacon.repeat(i => {
+                                    switch (i) {
+                                        case 0:
+                                            console.debug(
+                                                "We are going to poll the server for updates after %f seconds.", interval);
+                                            return Bacon.silence(interval * 1000);
+
+                                        case 1:
+                                            return this.fetchFromServer();
+
+                                        default:
+                                            return undefined;
+                                    }
+                                });
+                            });
             }
         });
     }
@@ -124,6 +142,7 @@ export class ReportModel {
                     sink(new Bacon.Error(e));
                 })
                 .then(() => {
+                    sink(new Bacon.Next(new ResetInsertionPointEvent()));
                     sink(new Bacon.Next(new UpdateProgressEvent(1)));
                     sink(new Bacon.End());
                 });
@@ -146,11 +165,14 @@ export class ReportModel {
                 const expectedEnd: number = await (async () => {
                     const newest = await this.database.newest();
                     if (newest) {
+                        console.debug("The timestamp of the newest entry in the database is ", newest.timestamp);
                         return newest.timestamp.getTime();
                     }
                     else {
                         const d = new Date();
-                        d.setMonth(d.getMonth()+1, d.getDate());
+                        d.setMonth(d.getMonth()-1, d.getDate());
+                        d.setHours(0, 0, 0, 0);
+                        console.debug("The timestamp of the last available entry is expected to be", d);
                         return d.getTime();
                     }
                 })();
@@ -180,7 +202,7 @@ export class ReportModel {
                         // FIXME: Filter entries before sending them to the bus.
                         sink(new Bacon.Next(new InsertEntryEvent(entry)));
                         sink(new Bacon.Next(new UpdateProgressEvent(
-                            (entry.timestamp.getTime() - started) / (expectedEnd - started))));
+                            (started - entry.timestamp.getTime()) / (started - expectedEnd))));
                     }
 
                     if (chunk.hasNext) {

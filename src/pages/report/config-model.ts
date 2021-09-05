@@ -17,6 +17,12 @@ export class ConfigModel {
     private readonly delayBetweenConsecutiveFetchBus: Bacon.Bus<number>;
     public  readonly delayBetweenConsecutiveFetch: Bacon.Property<number>;
 
+    /** The intervals in seconds between polling updates from the
+     * server.
+     */
+    private readonly intervalBetweenPollingBus: Bacon.Bus<number>;
+    public  readonly intervalBetweenPolling: Bacon.Property<number>;
+
     /** The ID of the report entry which was at least partially
      * visible last time the user scrolled the window. It becomes null
      * when no reports were shown at all.
@@ -31,12 +37,21 @@ export class ConfigModel {
         if (!this.storage.getItem("bnr.delay-between-consecutive-fetch")) {
             this.storage.setItem("bnr.delay-between-consecutive-fetch", String(1));
         }
+        if (!this.storage.getItem("bnr.interval-between-polling")) {
+            this.storage.setItem("bnr.interval-between-polling", String(5 * 60));
+        }
 
         this.delayBetweenConsecutiveFetchBus = new Bacon.Bus<number>();
         this.delayBetweenConsecutiveFetch    =
             this.delayBetweenConsecutiveFetchBus
                 .toProperty(
                     Number(this.storage.getItem("bnr.delay-between-consecutive-fetch")!));
+
+        this.intervalBetweenPollingBus = new Bacon.Bus<number>();
+        this.intervalBetweenPolling    =
+            this.intervalBetweenPollingBus
+                .toProperty(
+                    Number(this.storage.getItem("bnr.interval-between-polling")!));
 
         this.lastVisibleReportBus = new Bacon.Bus<ReportVisibility|null>();
         this.lastVisibleReport    =

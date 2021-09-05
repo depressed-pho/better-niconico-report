@@ -30,7 +30,7 @@ export class ReportView {
             if (ev instanceof ResetInsertionPointEvent) {
                 this.reportInsertionPoint = undefined;
             }
-            if (ev instanceof InsertEntryEvent) {
+            else if (ev instanceof InsertEntryEvent) {
                 this.insertEntry(ev.entry);
             }
             else if (ev instanceof ClearEntriesEvent) {
