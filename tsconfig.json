@@ -2,7 +2,6 @@
     "compilerOptions": {
         "moduleResolution": "Node",
         "noImplicitAny": true,
-        "noEmitOnError": true,
         "sourceMap": true,
         "strict": true,
         "allowSyntheticDefaultImports": true,

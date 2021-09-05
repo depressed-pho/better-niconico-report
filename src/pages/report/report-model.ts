@@ -179,6 +179,7 @@ export class ReportModel {
                 sink(new Bacon.Next(new UpdateProgressEvent(0)));
 
                 let skipDownTo: ReportID|undefined;
+                let numNewEntries = 0;
                 while (true) {
                     if (abort) {
                         console.debug("Got an abort request. Exiting...");
@@ -197,12 +198,15 @@ export class ReportModel {
                         if (!await this.database.tryInsert(entry)) {
                             console.debug(
                                 "Found an entry which was already in our database: %s", entry.id);
+                            console.debug(
+                                "We got %d new entries from the server.", numNewEntries);
                             return;
                         }
                         // FIXME: Filter entries before sending them to the bus.
                         sink(new Bacon.Next(new InsertEntryEvent(entry)));
                         sink(new Bacon.Next(new UpdateProgressEvent(
                             (started - entry.timestamp.getTime()) / (started - expectedEnd))));
+                        numNewEntries++;
                     }
 
                     if (chunk.hasNext) {
@@ -225,6 +229,7 @@ export class ReportModel {
                     }
                     else {
                         console.debug("It was the last report chunk available.");
+                        console.debug("We got %d entries from the server.", numNewEntries);
                         sink(new Bacon.Next(new ShowEndOfReportEvent()));
                         return;
                     }
@@ -236,6 +241,7 @@ export class ReportModel {
                     sink(new Bacon.Error(e));
                 })
                 .then(() => {
+                    sink(new Bacon.Next(new ResetInsertionPointEvent()));
                     sink(new Bacon.Next(new UpdateProgressEvent(1)));
                     sink(new Bacon.End());
                 });

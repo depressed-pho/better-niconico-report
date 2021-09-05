@@ -13,6 +13,7 @@ export class ReportView {
     private readonly model: ReportModel;
     private readonly progLoading: HTMLProgressElement;
     private readonly tmplReport: HTMLTemplateElement;
+    private readonly divReport: HTMLDivElement;
     private readonly divReportEntries: HTMLDivElement;
     private readonly divEndOfReport: HTMLDivElement;
     private reportInsertionPoint?: Element;
@@ -21,6 +22,7 @@ export class ReportView {
         this.model            = model;
         this.progLoading      = ctx.querySelector<HTMLProgressElement>("progress.bnr-loading-progress")!;
         this.tmplReport       = ctx.querySelector<HTMLTemplateElement>("template[data-for='report']")!;
+        this.divReport        = ctx.querySelector<HTMLDivElement>("div.bnr-report")!;
         this.divReportEntries = ctx.querySelector<HTMLDivElement>("div.bnr-report-entries")!;
         this.divEndOfReport   = ctx.querySelector<HTMLDivElement>("div.bnr-end-of-report")!;
 
@@ -49,16 +51,35 @@ export class ReportView {
     }
 
     private insertEntry(entry: ReportEntry) {
+        /* Inserting an element at somewhere not the bottom of the
+         * page has an unwanted consequence: contents that the user is
+         * currently looking at may suddenly move without their
+         * intention, leading to misclicks that are extremely
+         * frustrating. To prevent that from happening, we save the
+         * total height of hidden areas before the insertion, and
+         * correct the scroll position afterwards. */
+        const curScrollPos     = this.divReport.scrollTop;
+        const oldHiddenHeight  = this.divReport.scrollHeight - this.divReport.clientHeight;
+        let   adjustmentNeeded = false;
+
         const frag = this.renderEntry(entry);
         if (this.reportInsertionPoint) {
+            if (this.reportInsertionPoint.nextElementSibling) {
+                // It's not the bottom.
+                adjustmentNeeded = true;
+            }
             this.reportInsertionPoint.after(frag);
             this.reportInsertionPoint = this.reportInsertionPoint.nextElementSibling!;
         }
         else {
-            // Assume divReportEntries is empty.
-            console.assert(!this.divReportEntries.firstElementChild, this.divReportEntries);
+            adjustmentNeeded = true; // It's always the bottom.
             this.divReportEntries.prepend(frag);
             this.reportInsertionPoint = this.divReportEntries.firstElementChild!;
+        }
+
+        if (adjustmentNeeded) {
+            const newHiddenHeight = this.divReport.scrollHeight - this.divReport.clientHeight;
+            this.divReport.scrollTop = curScrollPos + (newHiddenHeight - oldHiddenHeight);
         }
     }
 
