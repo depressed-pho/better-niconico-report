@@ -1,8 +1,9 @@
 @import "~foundation-sites/scss/util/util";
 
+/* Foundation */
 $dropdownmenu-arrows: false;
-$topbar-padding: 0.1rem !default;
-$progress-margin-bottom: 0 !default;
+$topbar-padding: 0.1rem;
+$progress-margin-bottom: 0;
 
 .menu a {
     cursor: pointer;
@@ -10,3 +11,10 @@ $progress-margin-bottom: 0 !default;
 .menu li:hover {
     @extend .is-active;
 }
+
+/* Motion UI */
+$motion-ui-speeds: (
+    default: 250ms,
+    slow: 500ms,
+    fast: 125ms
+);

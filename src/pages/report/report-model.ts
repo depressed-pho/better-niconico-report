@@ -30,6 +30,9 @@ export class ClearEntriesEvent extends ReportEvent {
     public constructor() { super() }
 }
 
+/** Show the progress bar with given progress [0, 1), or hide when 1.
+ */
+
 export class ReportModel {
     private readonly config: ConfigModel;
     private readonly database: ReportDatabase;
@@ -92,10 +95,18 @@ export class ReportModel {
             const promise = (async () => {
                 // FIXME: progress bar
                 // FIXME: apply filter
+                let wasEmpty = true;
                 await this.database.each((entry) => {
+                    wasEmpty = false;
                     sink(new Bacon.Next(new InsertEntryEvent(entry)));
                 });
-                sink(new Bacon.Next(new ShowEndOfReportEvent()));
+                if (!wasEmpty) {
+                    /* We are going to fetch the report from the
+                     * server, but since the database wasn't empty
+                     * there won't be any reports older than the ones
+                     * in the database. */
+                    sink(new Bacon.Next(new ShowEndOfReportEvent()));
+                }
             })();
             promise
                 .catch(e => {
@@ -159,6 +170,7 @@ export class ReportModel {
                     }
                     else {
                         console.debug("It was the last report chunk available.");
+                        sink(new Bacon.Next(new ShowEndOfReportEvent()));
                         return;
                     }
                 }
@@ -199,7 +211,7 @@ export class ReportModel {
     /* Discard all the entries in the database and reload them from
      * the server.
      */
-    public refresh(): void {
+    public async refresh(): Promise<void> {
         /* Unplug the report source so that no report events will be
          * sent through the bus. */
         if (this.unplugReportSource) {
@@ -207,11 +219,13 @@ export class ReportModel {
             this.unplugReportSource = undefined;
         }
 
-        // FIXME: clear the database
+        // Clear the database
+        await this.database.clear();
 
         // Tell the report view to clear the report.
         this.reportEventBus.push(new ClearEntriesEvent());
 
-        // FIXME: reload from the server
+        // Reload the report from the server.
+        this.reportEventBus.plug(this.spawnReportSource());
     }
 }

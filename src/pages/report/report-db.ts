@@ -36,4 +36,9 @@ export class ReportDatabase extends Dexie {
     public async each(f: (entry: ReportEntry) => void): Promise<void> {
         await this.entries.orderBy("timestamp").reverse().each(f);
     }
+
+    /** Clear the entire database. */
+    public async clear(): Promise<void> {
+        await this.entries.clear();
+    }
 }
