@@ -2,27 +2,40 @@ import { DropdownMenu } from 'foundation-sites';
 import * as $ from 'jquery';
 import { parseHTML } from 'nicovideo/parse-html';
 import { ReportEntry } from 'nicovideo/report';
-import { AppendEntryEvent, ClearEntriesEvent, ReportModel } from './report-model';
+import { ResetInsertionPointEvent, InsertEntryEvent, ShowEndOfReportEvent,
+         ClearEntriesEvent, ReportModel
+       } from './report-model';
 
 /* Invariant: there is at most one instance of this class
  * throughout the lifetime of the report page.
  */
 export class ReportView {
     private readonly model: ReportModel;
-    private readonly tmpl: HTMLTemplateElement;
+    private readonly tmplReport: HTMLTemplateElement;
+    private readonly divReportEntries: HTMLDivElement;
+    private readonly divEndOfReport: HTMLDivElement;
+    private reportInsertionPoint?: Element;
 
     public constructor(model: ReportModel, ctx = document) {
-        this.model = model;
-        this.tmpl  = ctx.querySelector<HTMLTemplateElement>("template[data-for='report']")!;
+        this.model            = model;
+        this.tmplReport       = ctx.querySelector<HTMLTemplateElement>("template[data-for='report']")!;
+        this.divReportEntries = ctx.querySelector<HTMLDivElement>("div.bnr-report-entries")!;
+        this.divEndOfReport   = ctx.querySelector<HTMLDivElement>("div.bnr-end-of-report")!;
 
         /* It is our responsible for interpreting the report events
          * coming from the model. */
         this.model.reportEvents.onValue(ev => {
-            if (ev instanceof AppendEntryEvent) {
-                this.appendEntry(ev.entry);
+            if (ev instanceof ResetInsertionPointEvent) {
+                this.reportInsertionPoint = undefined;
+            }
+            if (ev instanceof InsertEntryEvent) {
+                this.insertEntry(ev.entry);
             }
             else if (ev instanceof ClearEntriesEvent) {
                 this.clearEntries();
+            }
+            else if (ev instanceof ShowEndOfReportEvent) {
+                this.divEndOfReport.classList.remove("hide");
             }
             else {
                 throw new Error("Unknown type of ReportEvent: " + ev.constructor.name);
@@ -30,13 +43,22 @@ export class ReportView {
         });
     }
 
-    private appendEntry(entry: ReportEntry) {
+    private insertEntry(entry: ReportEntry) {
         const frag = this.renderEntry(entry);
-        this.tmpl.parentNode!.appendChild(frag);
+        if (this.reportInsertionPoint) {
+            this.reportInsertionPoint.after(frag);
+            this.reportInsertionPoint = this.reportInsertionPoint.nextElementSibling!;
+        }
+        else {
+            // Assume divReportEntries is empty.
+            console.assert(!this.divReportEntries.firstElementChild, this.divReportEntries);
+            this.divReportEntries.prepend(frag);
+            this.reportInsertionPoint = this.divReportEntries.firstElementChild!;
+        }
     }
 
     private renderEntry(entry: ReportEntry): DocumentFragment {
-        const frag = this.tmpl.content.cloneNode(true) as DocumentFragment;
+        const frag = this.tmplReport.content.cloneNode(true) as DocumentFragment;
 
         // Populate the contents of the entry.
         const aUser = frag.querySelector<HTMLAnchorElement>("a.bnr-user")!
@@ -73,7 +95,7 @@ export class ReportView {
         }
         else {
             const divObject = frag.querySelector<HTMLDivElement>("div.bnr-object")!;
-            divObject.style.display = "none";
+            divObject.classList.add("hide");
         }
 
         // Setup a Foundation dropdown menu for muting.
@@ -84,11 +106,10 @@ export class ReportView {
     }
 
     private clearEntries() {
-        const container = this.tmpl.parentNode!;
-        for (const el of container.children) {
-            if (el.localName != "template") {
-                container.removeChild(el);
-            }
+        while (this.divReportEntries.firstChild) {
+            this.divReportEntries.removeChild(this.divReportEntries.firstChild);
         }
+        this.reportInsertionPoint = undefined;
+        this.divEndOfReport.classList.add("hide");
     }
 }

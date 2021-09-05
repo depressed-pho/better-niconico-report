@@ -2,16 +2,29 @@ import * as Bacon from 'baconjs';
 import { UnauthorizedError } from 'nicovideo/errors';
 import { ReportID, ReportChunk, ReportEntry, getReportChunk } from 'nicovideo/report';
 import { ConfigModel } from './config-model';
+import { ReportDatabase } from './report-db';
 
 export class ReportEvent {}
 
-/** Append a report entry at the end of the list.
+/** Move the insertion point to the top of the report.
  */
-export class AppendEntryEvent extends ReportEvent {
+export class ResetInsertionPointEvent extends ReportEvent {
+    public constructor() { super() }
+}
+
+/** Insert a report entry at the current insertion point.
+ */
+export class InsertEntryEvent extends ReportEvent {
     public constructor(public readonly entry: ReportEntry) { super() }
 }
 
-/** Clear the report list.
+/** Show the "end of report" marker.
+ */
+export class ShowEndOfReportEvent extends ReportEvent {
+    public constructor() { super() }
+}
+
+/** Clear the report list and hide the "end of report" marker.
  */
 export class ClearEntriesEvent extends ReportEvent {
     public constructor() { super() }
@@ -19,6 +32,7 @@ export class ClearEntriesEvent extends ReportEvent {
 
 export class ReportModel {
     private readonly config: ConfigModel;
+    private readonly database: ReportDatabase;
 
     /* Events telling the ReportView to what to do about the entry
      * list. */
@@ -36,6 +50,7 @@ export class ReportModel {
     public constructor(config: ConfigModel, authenticate: () => Promise<void>) {
         this.config         = config;
         this.authenticate   = authenticate;
+        this.database       = new ReportDatabase();
         this.reportEventBus = new Bacon.Bus<ReportEvent>();
         this.reportEvents   = this.reportEventBus.toEventStream();
 
@@ -69,32 +84,29 @@ export class ReportModel {
     }
 
     /** Create a stream of ReportEvent reading all the report entries
-     * in database.
+     * in the database.
      */
     private readDatabase(): Bacon.EventStream<ReportEvent> {
-        /*
-        // FIXME
-        return Bacon.once(new AppendEntryEvent({
-            id: "",
-            title: "did something",
-            timestamp: new Date(),
-            subject: {
-                id: "64011",
-                url: "https://www.nicovideo.jp/user/64011",
-                name: "玉ねぎ修字",
-                iconURL: "https://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/6/64011.jpg?1559446191"
-            },
-            action: "liked",
-            object: {
-                type: "video",
-                url: "https://www.nicovideo.jp/watch/sm38451158?ref=pc_mypage_nicorepo",
-                title: "クッキーク六花ー",
-                //thumbURL: "https://nicovideo.cdn.nimg.jp/thumbnails/38451158/38451158.6981162.M"
-                thumbURL: "https://secure-dcdn.cdn.nimg.jp/comch/channel-icon/128x128/ch2584920.jpg?1594468317"
+        return Bacon.fromBinder(sink => {
+            let   abort   = false;
+            const promise = (async () => {
+                // FIXME: progress bar
+                // FIXME: apply filter
+                await this.database.each((entry) => {
+                    sink(new Bacon.Next(new InsertEntryEvent(entry)));
+                });
+                sink(new Bacon.Next(new ShowEndOfReportEvent()));
+            })();
+            promise
+                .catch(e => {
+                    console.error(e);
+                    sink(new Bacon.Error(e));
+                })
+                .then(() => sink(new Bacon.End()));
+            return () => {
+                abort = true;
             }
-        }));
-        */
-        return Bacon.never<ReportEvent>();//FIXME
+        });
     }
 
     /** Create a stream of ReportEvent fetching from the server from
@@ -107,6 +119,10 @@ export class ReportModel {
             const promise = (async () => {
                 let skipDownTo: ReportID|undefined;
                 while (true) {
+                    if (abort) {
+                        console.debug("Got an abort request. Exiting...");
+                        return;
+                    }
                     console.debug(
                         "Requesting a chunk of report " +
                             (skipDownTo ? `skipping down to ${skipDownTo}.` : "from the beginning."));
@@ -117,9 +133,14 @@ export class ReportModel {
                         "Got a chunk containing %i report entries.", chunk.entries.length);
 
                     for (const entry of chunk.entries) {
-                        this.reportEventBus.push(new AppendEntryEvent(entry));
+                        if (!await this.database.tryInsert(entry)) {
+                            console.debug(
+                                "Found an entry which was already in our database: %s", entry.id);
+                            return;
+                        }
+                        sink(new Bacon.Next(new InsertEntryEvent(entry)));
+                        // FIXME: Filter entries before sending them to the bus.
                         // FIXME: progress bar
-                        // FIXME: break when the entry is in the database.
                     }
 
                     if (chunk.hasNext) {
@@ -128,24 +149,26 @@ export class ReportModel {
                             .delayBetweenConsecutiveFetch
                             .first()
                             .flatMap(delay => {
-                                console.log(
+                                console.debug(
                                     "We are going to fetch the next chunk after %f seconds.", delay);
                                 return Bacon.later(delay * 1000, null);
                             })
                             .firstToPromise();
-                        //break;//FIXME: delete this
+                        return;//FIXME: delete this
                         continue;
                     }
                     else {
                         console.debug("It was the last report chunk available.");
-                        break;
+                        return;
                     }
                 }
             })();
-            promise.catch((e) => {
-                console.error(e);
-                sink(new Bacon.Error(e));
-            });
+            promise
+                .catch(e => {
+                    console.error(e);
+                    sink(new Bacon.Error(e));
+                })
+                .then(() => sink(new Bacon.End()));
             return () => {
                 abort = true;
             };

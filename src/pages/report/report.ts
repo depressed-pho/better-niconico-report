@@ -21,18 +21,4 @@ window.addEventListener('DOMContentLoaded', async () => {
     const menu      = document.querySelector<HTMLElement>(".menu[data-for='control']")!;
     const miRefresh = menu.querySelector<HTMLAnchorElement>("a[data-for='refresh']")!;
     miRefresh.addEventListener("click", () => reportModel.refresh());
-
-    /*
-    try {
-        console.log(await getReport());
-    }
-    catch (e) {
-        if (e instanceof UnauthorizedError) {
-            //await login("foo@example.com", "bar");
-        }
-        else {
-            throw e;
-        }
-    }
-    */
 });
