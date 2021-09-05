@@ -86,6 +86,8 @@ export class ReportModel {
                     return this.fetchFromServer();
 
                 default:
+                    // FIXME: We should be responding to interval
+                    // changes even while in silence.
                     return this.config
                             .intervalBetweenPolling
                             .first()
@@ -211,6 +213,8 @@ export class ReportModel {
 
                     if (chunk.hasNext) {
                         skipDownTo = chunk.oldestID;
+                        // FIXME: We should be responding to interval
+                        // changes even while in silence.
                         await this.config
                             .delayBetweenConsecutiveFetch
                             .first()

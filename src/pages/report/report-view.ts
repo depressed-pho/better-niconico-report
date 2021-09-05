@@ -1,16 +1,15 @@
+import * as Bacon from 'baconjs';
 import { DropdownMenu } from 'foundation-sites';
 import * as $ from 'jquery';
 import { parseHTML } from 'nicovideo/parse-html';
 import { ReportEntry } from 'nicovideo/report';
-import { ResetInsertionPointEvent, InsertEntryEvent, ShowEndOfReportEvent,
-         ClearEntriesEvent, UpdateProgressEvent, ReportModel
-       } from './report-model';
 
 /* Invariant: there is at most one instance of this class
  * throughout the lifetime of the report page.
  */
 export class ReportView {
-    private readonly model: ReportModel;
+    public readonly ctrlRefresh: Bacon.EventStream<null>;
+
     private readonly progLoading: HTMLProgressElement;
     private readonly tmplReport: HTMLTemplateElement;
     private readonly divReport: HTMLDivElement;
@@ -18,39 +17,23 @@ export class ReportView {
     private readonly divEndOfReport: HTMLDivElement;
     private reportInsertionPoint?: Element;
 
-    public constructor(model: ReportModel, ctx = document) {
-        this.model            = model;
+    public constructor(ctx = document) {
+        const menu       = document.querySelector<HTMLElement>(".menu[data-for='control']")!;
+        const miRefresh  = menu.querySelector<HTMLAnchorElement>("a[data-for='refresh']")!;
+        this.ctrlRefresh = Bacon.fromEvent(miRefresh, "click").map(Bacon.constant(null));
+
         this.progLoading      = ctx.querySelector<HTMLProgressElement>("progress.bnr-loading-progress")!;
         this.tmplReport       = ctx.querySelector<HTMLTemplateElement>("template[data-for='report']")!;
         this.divReport        = ctx.querySelector<HTMLDivElement>("div.bnr-report")!;
         this.divReportEntries = ctx.querySelector<HTMLDivElement>("div.bnr-report-entries")!;
         this.divEndOfReport   = ctx.querySelector<HTMLDivElement>("div.bnr-end-of-report")!;
-
-        /* It is our responsible for interpreting the report events
-         * coming from the model. */
-        this.model.reportEvents.onValue(ev => {
-            if (ev instanceof ResetInsertionPointEvent) {
-                this.reportInsertionPoint = undefined;
-            }
-            else if (ev instanceof InsertEntryEvent) {
-                this.insertEntry(ev.entry);
-            }
-            else if (ev instanceof ClearEntriesEvent) {
-                this.clearEntries();
-            }
-            else if (ev instanceof ShowEndOfReportEvent) {
-                this.divEndOfReport.classList.remove("hide");
-            }
-            else if (ev instanceof UpdateProgressEvent) {
-                this.updateProgress(ev.progress);
-            }
-            else {
-                throw new Error("Unknown type of ReportEvent: " + ev.constructor.name);
-            }
-        });
     }
 
-    private insertEntry(entry: ReportEntry) {
+    public resetInsertionPoint(): void {
+        this.reportInsertionPoint = undefined;
+    }
+
+    public insertEntry(entry: ReportEntry) {
         /* Inserting an element at somewhere not the bottom of the
          * page has an unwanted consequence: contents that the user is
          * currently looking at may suddenly move without their
@@ -131,7 +114,7 @@ export class ReportView {
         return frag;
     }
 
-    private clearEntries() {
+    public clearEntries() {
         while (this.divReportEntries.firstChild) {
             this.divReportEntries.removeChild(this.divReportEntries.firstChild);
         }
@@ -139,7 +122,11 @@ export class ReportView {
         this.divEndOfReport.classList.add("hide");
     }
 
-    private updateProgress(progress: number) {
+    public showEndOfReport(): void {
+        this.divEndOfReport.classList.remove("hide");
+    }
+
+    public updateProgress(progress: number) {
         this.progLoading.value = progress;
         if (progress < 1) {
             if (!this.progLoading.classList.contains("bnr-fast-fade-in")) {

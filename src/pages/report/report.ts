@@ -3,11 +3,14 @@ import * as $ from 'jquery';
 import '../pages.scss';
 import './report.scss';
 import { ConfigModel } from './config-model';
-import { ReportModel } from './report-model';
+import { ResetInsertionPointEvent, InsertEntryEvent, ShowEndOfReportEvent,
+         ClearEntriesEvent, UpdateProgressEvent, ReportModel
+       } from './report-model';
 import { ReportView } from './report-view';
 import { signIn } from '../sign-in/sign-in';
 
-/* This is the entry point of /assets/pages/report/report.html
+/* This is the entry point of /assets/pages/report/report.html and is
+ * a controller in the MVC sense.
  */
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -15,10 +18,31 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const configModel = new ConfigModel();
     const reportModel = new ReportModel(configModel, signIn);
-    const reportView = new ReportView(reportModel);
+    const reportView = new ReportView();
 
     /* Setup the control menu on the top bar. */
-    const menu      = document.querySelector<HTMLElement>(".menu[data-for='control']")!;
-    const miRefresh = menu.querySelector<HTMLAnchorElement>("a[data-for='refresh']")!;
-    miRefresh.addEventListener("click", () => reportModel.refresh());
+    reportView.ctrlRefresh.onValue(() => reportModel.refresh());
+
+    /* It is our responsible for interpreting the report events coming
+     * from the model. */
+    reportModel.reportEvents.onValue(ev => {
+        if (ev instanceof ResetInsertionPointEvent) {
+            reportView.resetInsertionPoint();
+        }
+        else if (ev instanceof InsertEntryEvent) {
+            reportView.insertEntry(ev.entry);
+        }
+        else if (ev instanceof ClearEntriesEvent) {
+            reportView.clearEntries();
+        }
+        else if (ev instanceof ShowEndOfReportEvent) {
+            reportView.showEndOfReport();
+        }
+        else if (ev instanceof UpdateProgressEvent) {
+            reportView.updateProgress(ev.progress);
+        }
+        else {
+            throw new Error("Unknown type of ReportEvent: " + ev.constructor.name);
+        }
+    });
 });

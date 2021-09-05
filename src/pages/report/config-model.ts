@@ -24,8 +24,9 @@ export class ConfigModel {
     public  readonly intervalBetweenPolling: Bacon.Property<number>;
 
     /** The ID of the report entry which was at least partially
-     * visible last time the user scrolled the window. It becomes null
-     * when no reports were shown at all.
+     * visible last time a new report entry was inserted, or the user
+     * scrolled or resized the window. It becomes null when no reports
+     * were shown at all.
      */
     private readonly lastVisibleReportBus: Bacon.Bus<ReportVisibility|null>;
     public  readonly lastVisibleReport: Bacon.Property<ReportVisibility|null>;
