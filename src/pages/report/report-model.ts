@@ -4,6 +4,8 @@ import { ReportID, ReportChunk, ReportEntry, getReportChunk } from 'nicovideo/re
 import { ConfigModel } from './config-model';
 import { ReportDatabase } from './report-db';
 
+const DEBUG_FETCH_ONLY_THE_FIRST_CHUNK = true;
+
 export class ReportEvent {}
 
 /** Move the insertion point to the top of the report.
@@ -32,6 +34,9 @@ export class ClearEntriesEvent extends ReportEvent {
 
 /** Show the progress bar with given progress [0, 1), or hide when 1.
  */
+export class UpdateProgressEvent extends ReportEvent {
+    public constructor(public readonly progress: number) { super() }
+}
 
 export class ReportModel {
     private readonly config: ConfigModel;
@@ -93,27 +98,35 @@ export class ReportModel {
         return Bacon.fromBinder(sink => {
             let   abort   = false;
             const promise = (async () => {
-                // FIXME: progress bar
                 // FIXME: apply filter
-                let wasEmpty = true;
-                await this.database.each((entry) => {
-                    wasEmpty = false;
-                    sink(new Bacon.Next(new InsertEntryEvent(entry)));
+                sink(new Bacon.Next(new UpdateProgressEvent(0)));
+                await this.database.tx("r", async () => {
+                    const total = await this.database.count();
+                    let   count = 0;
+                    await this.database.each((entry) => {
+                        count++;
+                        sink(new Bacon.Next(new InsertEntryEvent(entry)));
+                        sink(new Bacon.Next(new UpdateProgressEvent(count / total)));
+                    });
+                    if (total > 0) {
+                        /* We are going to fetch the report from the
+                         * server, but since the database wasn't empty,
+                         * there won't be any reports older than the ones
+                         * in the database. */
+                        sink(new Bacon.Next(new ShowEndOfReportEvent()));
+                    }
+                    sink(new Bacon.Next(new UpdateProgressEvent(1)));
                 });
-                if (!wasEmpty) {
-                    /* We are going to fetch the report from the
-                     * server, but since the database wasn't empty
-                     * there won't be any reports older than the ones
-                     * in the database. */
-                    sink(new Bacon.Next(new ShowEndOfReportEvent()));
-                }
             })();
             promise
                 .catch(e => {
                     console.error(e);
                     sink(new Bacon.Error(e));
                 })
-                .then(() => sink(new Bacon.End()));
+                .then(() => {
+                    sink(new Bacon.Next(new UpdateProgressEvent(1)));
+                    sink(new Bacon.End());
+                });
             return () => {
                 abort = true;
             }
@@ -128,6 +141,21 @@ export class ReportModel {
         return Bacon.fromBinder(sink => {
             let   abort   = false;
             const promise = (async () => {
+                /* Some work for displaying the progress bar. */
+                const started    : number = Date.now();
+                const expectedEnd: number = await (async () => {
+                    const newest = await this.database.newest();
+                    if (newest) {
+                        return newest.timestamp.getTime();
+                    }
+                    else {
+                        const d = new Date();
+                        d.setMonth(d.getMonth()+1, d.getDate());
+                        return d.getTime();
+                    }
+                })();
+                sink(new Bacon.Next(new UpdateProgressEvent(0)));
+
                 let skipDownTo: ReportID|undefined;
                 while (true) {
                     if (abort) {
@@ -149,9 +177,10 @@ export class ReportModel {
                                 "Found an entry which was already in our database: %s", entry.id);
                             return;
                         }
-                        sink(new Bacon.Next(new InsertEntryEvent(entry)));
                         // FIXME: Filter entries before sending them to the bus.
-                        // FIXME: progress bar
+                        sink(new Bacon.Next(new InsertEntryEvent(entry)));
+                        sink(new Bacon.Next(new UpdateProgressEvent(
+                            (entry.timestamp.getTime() - started) / (expectedEnd - started))));
                     }
 
                     if (chunk.hasNext) {
@@ -165,8 +194,12 @@ export class ReportModel {
                                 return Bacon.later(delay * 1000, null);
                             })
                             .firstToPromise();
-                        return;//FIXME: delete this
-                        continue;
+                        if (DEBUG_FETCH_ONLY_THE_FIRST_CHUNK) {
+                            return;
+                        }
+                        else {
+                            continue;
+                        }
                     }
                     else {
                         console.debug("It was the last report chunk available.");
@@ -180,7 +213,10 @@ export class ReportModel {
                     console.error(e);
                     sink(new Bacon.Error(e));
                 })
-                .then(() => sink(new Bacon.End()));
+                .then(() => {
+                    sink(new Bacon.Next(new UpdateProgressEvent(1)));
+                    sink(new Bacon.End());
+                });
             return () => {
                 abort = true;
             };

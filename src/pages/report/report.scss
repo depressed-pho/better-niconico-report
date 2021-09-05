@@ -20,6 +20,18 @@ $object-thumb-height: 63px;
     transform: translateY(-50%);
 }
 
+.bnr-transparent {
+    opacity: 0;
+}
+.bnr-fast-fade-in {
+    opacity: 1;
+    transition: opacity 100ms;
+}
+.bnr-fast-fade-out {
+    opacity: 0;
+    transition: opacity 100ms;
+}
+
 .bnr-report {
     padding-top: 1rem;
     overflow-y: auto;

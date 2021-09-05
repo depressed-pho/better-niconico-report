@@ -12,6 +12,12 @@ export class ReportDatabase extends Dexie {
         this.entries = this.table("entries");
     }
 
+    /* Dexie doesn't export its TransactioniMode type for whatever
+     * reason. */
+    public async tx<T>(mode: string, fn: () => Promise<T>): Promise<T> {
+        return await this.transaction(mode as any, this.entries, fn);
+    }
+
     /** Try inserting a report entry. Return true if it wasn't already
      * there, or false otherwise.
      */
@@ -28,6 +34,19 @@ export class ReportDatabase extends Dexie {
                 throw e;
             }
         }
+    }
+
+    /** Count the number of report entries. */
+    public async count(): Promise<number> {
+        return await this.entries.count();
+    }
+
+    /** Find the newest entry in the database, or null if no entries
+     * are in the database.
+     */
+    public async newest(): Promise<ReportEntry|null> {
+        const res = await this.entries.orderBy("timestamp").reverse().limit(1).toArray();
+        return res.length ? res[0] : null;
     }
 
     /** Iterate on all the report entries in the database, sorted by

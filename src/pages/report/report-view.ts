@@ -3,7 +3,7 @@ import * as $ from 'jquery';
 import { parseHTML } from 'nicovideo/parse-html';
 import { ReportEntry } from 'nicovideo/report';
 import { ResetInsertionPointEvent, InsertEntryEvent, ShowEndOfReportEvent,
-         ClearEntriesEvent, ReportModel
+         ClearEntriesEvent, UpdateProgressEvent, ReportModel
        } from './report-model';
 
 /* Invariant: there is at most one instance of this class
@@ -11,6 +11,7 @@ import { ResetInsertionPointEvent, InsertEntryEvent, ShowEndOfReportEvent,
  */
 export class ReportView {
     private readonly model: ReportModel;
+    private readonly progLoading: HTMLProgressElement;
     private readonly tmplReport: HTMLTemplateElement;
     private readonly divReportEntries: HTMLDivElement;
     private readonly divEndOfReport: HTMLDivElement;
@@ -18,6 +19,7 @@ export class ReportView {
 
     public constructor(model: ReportModel, ctx = document) {
         this.model            = model;
+        this.progLoading      = ctx.querySelector<HTMLProgressElement>("progress.bnr-loading-progress")!;
         this.tmplReport       = ctx.querySelector<HTMLTemplateElement>("template[data-for='report']")!;
         this.divReportEntries = ctx.querySelector<HTMLDivElement>("div.bnr-report-entries")!;
         this.divEndOfReport   = ctx.querySelector<HTMLDivElement>("div.bnr-end-of-report")!;
@@ -36,6 +38,9 @@ export class ReportView {
             }
             else if (ev instanceof ShowEndOfReportEvent) {
                 this.divEndOfReport.classList.remove("hide");
+            }
+            else if (ev instanceof UpdateProgressEvent) {
+                this.updateProgress(ev.progress);
             }
             else {
                 throw new Error("Unknown type of ReportEvent: " + ev.constructor.name);
@@ -111,5 +116,23 @@ export class ReportView {
         }
         this.reportInsertionPoint = undefined;
         this.divEndOfReport.classList.add("hide");
+    }
+
+    private updateProgress(progress: number) {
+        this.progLoading.value = progress;
+        if (progress < 1) {
+            if (!this.progLoading.classList.contains("bnr-fast-fade-in")) {
+                this.progLoading.classList.add("bnr-fast-fade-in");
+                this.progLoading.classList.remove("bnr-fast-fade-out");
+                // The progress bar is initially hidden without transition.
+                this.progLoading.classList.remove("bnr-transparent");
+            }
+        }
+        else {
+            if (!this.progLoading.classList.contains("bnr-fast-fade-out")) {
+                this.progLoading.classList.add("bnr-fast-fade-out");
+                this.progLoading.classList.remove("bnr-fast-fade-in");
+            }
+        }
     }
 }
