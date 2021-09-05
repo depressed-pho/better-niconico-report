@@ -18,7 +18,7 @@ export interface ReportEntry {
     timestamp: Date,
     subject: User,
     action: Action,
-    object: ReportObject
+    object?: ReportObject
 }
 
 export interface User {
@@ -29,7 +29,7 @@ export interface User {
 }
 
 export interface ReportObject {
-    type: "video" | "stream" | "image" | "unknown",
+    type: "video" | "stream" | "image" | "comic" | "article" | "model" | "game" | "unknown",
     url: string,
     title: string,
     thumbURL: string
@@ -46,9 +46,10 @@ export async function getReportChunk(skipDownTo?: ReportID): Promise<ReportChunk
     if (res.ok) {
         const json = await res.json();
 
-        console.assert(typeof(json.meta.maxId) === "string", json.meta);
-        console.assert(typeof(json.meta.minId) === "string", json.meta);
-        console.assert(typeof(json.meta.hasNext) === "boolean", json.meta);
+        console.assert(typeof json.meta.maxId   === "string" , json.meta);
+        console.assert(typeof json.meta.minId   === "string" , json.meta);
+        console.assert(typeof json.meta.hasNext === "boolean", json.meta);
+        console.assert(json.data instanceof Array, json);
         return {
             newestID: json.meta.maxId,
             oldestID: json.meta.minId,
@@ -62,24 +63,28 @@ export async function getReportChunk(skipDownTo?: ReportID): Promise<ReportChunk
 }
 
 function parseEntry(json: any): ReportEntry {
-    console.assert(typeof(json.id) === "string", json);
-    console.assert(typeof(json.title) === "string", json);
-    console.assert(typeof(json.muteContext.trigger) === "string", json);
+    console.assert(typeof json.id          === "string", json);
+    console.assert(typeof json.title       === "string", json);
+    console.assert(typeof json.muteContext === "object", json);
+    console.assert(typeof json.muteContext.trigger === "string", json.muteContext);
+    if (json.object) {
+        console.assert(typeof json.object === "object", json);
+    }
     return {
         id: json.id,
         title: json.title,
         timestamp: new Date(json.updated), // Should be in W3C DTF.
         subject: parseSubject(json.muteContext, json.actor),
         action: parseAction(json.muteContext.trigger),
-        object: parseObject(json.object)
+        object: json.object ? parseObject(json.object) : undefined
     };
 }
 
 function parseSubject(jsonCtx: any, jsonActor: any): User {
-    console.assert(typeof(jsonCtx.sender.id) === "string", jsonCtx);
-    console.assert(typeof(jsonActor.url) === "string", jsonActor);
-    console.assert(typeof(jsonActor.name) === "string", jsonActor);
-    console.assert(typeof(jsonActor.icon) === "string", jsonActor);
+    console.assert(typeof jsonCtx.sender.id === "string", jsonCtx);
+    console.assert(typeof jsonActor.url     === "string", jsonActor);
+    console.assert(typeof jsonActor.name    === "string", jsonActor);
+    console.assert(typeof jsonActor.icon    === "string", jsonActor);
     return {
         id: jsonCtx.sender.id,
         url: jsonActor.url,
@@ -90,16 +95,21 @@ function parseSubject(jsonCtx: any, jsonActor: any): User {
 
 function parseAction(trigger: string): Action {
     switch (trigger) {
+        case "illustImage.nicoad_user_advertise_illust":
+        case "game.nicoad_user_advertise_game":
         case "program.nicoad_user_advertise_program":
+        case "solid.nicoad_user_advertise_solid":
         case "video.nicoad_user_advertise_video":
             return "advertised";
 
+        case "program.live_channel_program_reserve":
         case "program.live_user_program_reserve":
         case "program.live_user_program_video_live_reserve":
             return "reserved-broadcast";
 
         case "program.live_channel_program_onairs":
         case "program.live_user_program_onairs":
+        case "program.live_user_program_video_live_onairs":
             return "broadcasted";
 
         case "video.nicovideo_user_video_kiriban_play":
@@ -108,10 +118,21 @@ function parseAction(trigger: string): Action {
         case "video.nicovideo_video_first_liked_by_user":
             return "liked";
 
+        case "community.nicommunity_user_video_registered":
+        case "illustImage.nicoseiga_user_illust_clip":
+        case "mangaContent.nicoseiga_user_manga_content_favorite":
         case "mylist.nicovideo_user_mylist_add_video":
+        case "solid.nicovideo_user_solid_favorite":
             return "listed";
 
+        case "channelArticle.nicovideo_user_blomaga_upload":
+        case "channelArticle.blomaga_channel_channel_article_publish":
+        case "community.nicommunity_user_community_news_created":
+        case "game.nicogame_user_game_update":
+        case "game.nicogame_user_game_upload":
         case "illustImage.nicoseiga_user_illust_upload":
+        case "solid.nicovideo_user_solid_upload":
+        case "video.nicovideo_channel_video_upload":
         case "video.nicovideo_user_video_upload":
             return "uploaded";
 
@@ -134,6 +155,15 @@ function parseObject(json: any): ReportObject {
                     return "stream";
                 case "image":
                     return "image";
+                case "comicStory":
+                    return "comic";
+                case "article":
+                    return "article";
+                case "3DModel":
+                case "solid":
+                    return "model";
+                case "game":
+                    return "game";
                 default:
                     console.warn("Unknown object type:", json);
                     return "unknown";

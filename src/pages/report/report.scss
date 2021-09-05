@@ -4,6 +4,13 @@ $user-icon-height: 40px;
 $object-thumb-width: 112px;
 $object-thumb-height: 63px;
 
+@mixin bnr-aspect-ratio-retaining-img {
+    object-fit: contain;
+    object-position: center;
+    background-color: gray;
+    border-radius: 4px;
+}
+
 .bnr-loading-progress {
     width: 5rem;
 
@@ -18,14 +25,18 @@ $object-thumb-height: 63px;
     overflow-y: auto;
 
     a {
-        color: inherit;
+        color: black;
         text-decoration: none;
+    }
+    a:visited {
+        color: gray;
     }
 }
 
 .bnr-user-icon {
     width: $user-icon-width;
     height: $user-icon-height;
+    @include bnr-aspect-ratio-retaining-img;
 }
 
 .bnr-report-body {
@@ -39,7 +50,11 @@ $object-thumb-height: 63px;
 .bnr-object-thumb {
     width: $object-thumb-width;
     height: $object-thumb-height;
-    margin-right: 0.9em;
+    @include bnr-aspect-ratio-retaining-img;
+}
+
+.bnr-object-details {
+    margin-left: 0.9em;
 }
 
 .bnr-object-type {

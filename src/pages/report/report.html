@@ -76,7 +76,7 @@
                          and a muting menu. -->
                     <div class="cell grid-x">
                       <div class="cell auto">
-                        <a class="bnr-user">
+                        <a class="bnr-user" target="_blank">
                           <img class="bnr-user-icon" />
                           <span class="bnr-user-name"></span>
                         </a>
@@ -107,23 +107,24 @@
                         <div class="cell auto bnr-report-title"></div>
                         <div class="cell shrink bnr-report-timestamp"></div>
                       </div>
-                      <!-- Thumbnail and details -->
-                      <div class="cell grid-x">
+                      <!-- Thumbnail and details. These may be missing
+                           depending on the action type. -->
+                      <div class="cell grid-x bnr-object">
                         <!-- Thumbnail -->
-                        <div class="cell shrink">
-                          <a class="bnr-object">
+                        <div class="cell shrink bnr-object-thumb">
+                          <a class="bnr-object-anchor" target="_blank">
                             <img class="bnr-object-thumb" />
                           </a>
                         </div>
                         <!-- Object details -->
-                        <div class="cell auto grid-y">
+                        <div class="cell auto grid-y bnr-object-details">
                           <!-- Object type -->
                           <div class="cell">
                             <span class="bnr-object-type"></span>
                           </div>
                           <!-- Object title -->
                           <div class="cell">
-                            <a class="bnr-object">
+                            <a class="bnr-object-anchor" target="_blank">
                               <span class="bnr-object-title"></span>
                             </a>
                           </div>

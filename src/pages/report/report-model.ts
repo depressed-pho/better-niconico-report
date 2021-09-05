@@ -58,6 +58,12 @@ export class ReportModel {
             switch (i) {
                 case 0:
                     return this.readDatabase();
+
+                case 1:
+                    return this.fetchFromServer();
+
+                default:
+                    console.log("the end of report source");// FIXME
             }
         });
     }
@@ -66,6 +72,7 @@ export class ReportModel {
      * in database.
      */
     private readDatabase(): Bacon.EventStream<ReportEvent> {
+        /*
         // FIXME
         return Bacon.once(new AppendEntryEvent({
             id: "",
@@ -82,61 +89,66 @@ export class ReportModel {
                 type: "video",
                 url: "https://www.nicovideo.jp/watch/sm38451158?ref=pc_mypage_nicorepo",
                 title: "クッキーク六花ー",
-                thumbURL: "https://nicovideo.cdn.nimg.jp/thumbnails/38451158/38451158.6981162.M"
+                //thumbURL: "https://nicovideo.cdn.nimg.jp/thumbnails/38451158/38451158.6981162.M"
+                thumbURL: "https://secure-dcdn.cdn.nimg.jp/comch/channel-icon/128x128/ch2584920.jpg?1594468317"
             }
         }));
-    }
-
-    /** Create a stream of ReportEvent from a singleton stream of
-     * fetch trigger FIXME
-     */
-    private fetchFromServer(): Bacon.EventStream<ReportEvent> {
+        */
         return Bacon.never<ReportEvent>();//FIXME
     }
 
-    /** Create a stream of ReportChunk from a stream of fetch requests
-     * i.e. skipDownTo?: ReportID) while preserving the order of the
-     * requests.
+    /** Create a stream of ReportEvent fetching from the server from
+     * the beginning up until the first entry that is already in the
+     * database. There will be a silence between each chunk requests.
      */
-    private mapChunkRequests(requests: Bacon.EventStream<ReportID|undefined>): Bacon.EventStream<ReportChunk> {
-        /* Note that we don't actually need to preserve the order,
-         * because we never post a new request before receiving a
-         * response for an old request. This is only for safety.
-         */
+    private fetchFromServer(): Bacon.EventStream<ReportEvent> {
         return Bacon.fromBinder(sink => {
-            const queue: (ReportChunk | null)[] = [];
-            const unsub = requests.subscribe(ev => {
-                if (ev instanceof Bacon.End || ev instanceof Bacon.Error) {
-                    sink(ev as any);
-                }
-                else if (ev instanceof Bacon.Value) {
-                    queue.push(null);
-                    const idx = queue.length-1;
+            let   abort   = false;
+            const promise = (async () => {
+                let skipDownTo: ReportID|undefined;
+                while (true) {
+                    console.debug(
+                        "Requesting a chunk of report " +
+                            (skipDownTo ? `skipping down to ${skipDownTo}.` : "from the beginning."));
 
-                    this.fetchChunkFromServer(ev.value)
-                        .then(chunk => {
-                            queue[idx] = chunk;
+                    const chunk = await this.fetchChunkFromServer(skipDownTo);
 
-                            // Flush the queue up to the first null.
-                            let i = 0;
-                            for (; i < queue.length; ) {
-                                if (queue[idx]) {
-                                    sink(new Bacon.Next(queue[i]!));
-                                    i++;
-                                }
-                                else {
-                                    break;
-                                }
-                            }
-                            queue.splice(0, i);
-                        })
-                        .catch(e => sink(new Bacon.Error(e)));
+                    console.debug(
+                        "Got a chunk containing %i report entries.", chunk.entries.length);
+
+                    for (const entry of chunk.entries) {
+                        this.reportEventBus.push(new AppendEntryEvent(entry));
+                        // FIXME: progress bar
+                        // FIXME: break when the entry is in the database.
+                    }
+
+                    if (chunk.hasNext) {
+                        skipDownTo = chunk.oldestID;
+                        await this.config
+                            .delayBetweenConsecutiveFetch
+                            .first()
+                            .flatMap(delay => {
+                                console.log(
+                                    "We are going to fetch the next chunk after %f seconds.", delay);
+                                return Bacon.later(delay * 1000, null);
+                            })
+                            .firstToPromise();
+                        //break;//FIXME: delete this
+                        continue;
+                    }
+                    else {
+                        console.debug("It was the last report chunk available.");
+                        break;
+                    }
                 }
-                else {
-                    throw new Error("Unknown Bacon event type: " + ev.constructor.name);
-                }
+            })();
+            promise.catch((e) => {
+                console.error(e);
+                sink(new Bacon.Error(e));
             });
-            return unsub;
+            return () => {
+                abort = true;
+            };
         });
     }
 

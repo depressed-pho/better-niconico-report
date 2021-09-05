@@ -11,7 +11,7 @@ export interface ReportVisibility {
 export class ConfigModel {
     private readonly storage: Storage;
 
-    /** The delay in milliseconds between fetching report chunks
+    /** The delay in seconds between fetching report chunks
      * consecutively from the server.
      */
     private readonly delayBetweenConsecutiveFetchBus: Bacon.Bus<number>;
@@ -29,7 +29,7 @@ export class ConfigModel {
 
         /* Populate the storage with default values. */
         if (!this.storage.getItem("bnr.delay-between-consecutive-fetch")) {
-            this.storage.setItem("bnr.delay-between-consecutive-fetch", String(3000));
+            this.storage.setItem("bnr.delay-between-consecutive-fetch", String(1));
         }
 
         this.delayBetweenConsecutiveFetchBus = new Bacon.Bus<number>();

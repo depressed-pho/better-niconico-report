@@ -1,5 +1,6 @@
 import { DropdownMenu } from 'foundation-sites';
 import * as $ from 'jquery';
+import { parseHTML } from 'nicovideo/parse-html';
 import { ReportEntry } from 'nicovideo/report';
 import { AppendEntryEvent, ClearEntriesEvent, ReportModel } from './report-model';
 
@@ -48,26 +49,32 @@ export class ReportView {
         spanUser.textContent = entry.subject.name;
 
         const divTitle = frag.querySelector<HTMLDivElement>("div.bnr-report-title")!;
-        divTitle.textContent = entry.title;
+        divTitle.appendChild(parseHTML(entry.title));
 
         const divTimestamp = frag.querySelector<HTMLDivElement>("div.bnr-report-timestamp")!;
         divTimestamp.textContent = entry.timestamp.toLocaleString();
 
-        for (let aObject of frag.querySelectorAll<HTMLAnchorElement>("a.bnr-object")) {
-            aObject.href = entry.object.url;
+        if (entry.object) {
+            for (const aObject of frag.querySelectorAll<HTMLAnchorElement>("a.bnr-object-anchor")) {
+                aObject.href = entry.object.url;
+            }
+
+            const imgObjectThumb = frag.querySelector<HTMLImageElement>("img.bnr-object-thumb")!;
+            imgObjectThumb.src = entry.object.thumbURL;
+
+            function capitalize(str: string): string {
+                return str.substring(0, 1).toUpperCase() + str.substring(1);
+            }
+            const spanObjectType = frag.querySelector<HTMLSpanElement>("span.bnr-object-type")!;
+            spanObjectType.textContent = capitalize(entry.object.type);
+
+            const spanObjectTitle = frag.querySelector<HTMLSpanElement>("span.bnr-object-title")!;
+            spanObjectTitle.textContent = entry.object.title;
         }
-
-        const imgObjectThumb = frag.querySelector<HTMLImageElement>("img.bnr-object-thumb")!;
-        imgObjectThumb.src = entry.object.thumbURL;
-
-        function capitalize(str: string): string {
-            return str.substring(0, 1).toUpperCase() + str.substring(1);
+        else {
+            const divObject = frag.querySelector<HTMLDivElement>("div.bnr-object")!;
+            divObject.style.display = "none";
         }
-        const spanObjectType = frag.querySelector<HTMLSpanElement>("span.bnr-object-type")!;
-        spanObjectType.textContent = capitalize(entry.object.type);
-
-        const spanObjectTitle = frag.querySelector<HTMLSpanElement>("span.bnr-object-title")!;
-        spanObjectTitle.textContent = entry.object.title;
 
         // Setup a Foundation dropdown menu for muting.
         const menuMuting = frag.querySelector<HTMLElement>(".menu.bnr-muting")!;
@@ -78,7 +85,7 @@ export class ReportView {
 
     private clearEntries() {
         const container = this.tmpl.parentNode!;
-        for (let el of container.children) {
+        for (const el of container.children) {
             if (el.localName != "template") {
                 container.removeChild(el);
             }
