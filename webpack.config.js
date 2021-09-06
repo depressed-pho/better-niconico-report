@@ -35,7 +35,7 @@ module.exports = (env, argv) => {
         devtool: "cheap-module-source-map",
         watchOptions: {
             // Ignore Emacs auto-save files.
-            ignored: '**/.#*'
+            ignored: ['**/.#*', '**/#*']
         }
     };
     const common = {

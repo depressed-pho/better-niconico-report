@@ -1,11 +1,6 @@
 import * as Bacon from 'baconjs';
 import { ReportID } from 'nicovideo/report';
 
-export interface ReportVisibility {
-    id: ReportID,
-    fromTop: number // [0, 1]
-}
-
 /** Invariant: there is at most one instance of this class.
  */
 export class ConfigModel {
@@ -22,14 +17,6 @@ export class ConfigModel {
      */
     private readonly intervalBetweenPollingBus: Bacon.Bus<number>;
     public  readonly intervalBetweenPolling: Bacon.Property<number>;
-
-    /** The ID of the report entry which was at least partially
-     * visible last time a new report entry was inserted, or the user
-     * scrolled or resized the window. It becomes null when no reports
-     * were shown at all.
-     */
-    private readonly lastVisibleReportBus: Bacon.Bus<ReportVisibility|null>;
-    public  readonly lastVisibleReport: Bacon.Property<ReportVisibility|null>;
 
     public constructor() {
         this.storage = window.localStorage;
@@ -53,21 +40,22 @@ export class ConfigModel {
             this.intervalBetweenPollingBus
                 .toProperty(
                     Number(this.storage.getItem("bnr.interval-between-polling")!));
+    }
 
-        this.lastVisibleReportBus = new Bacon.Bus<ReportVisibility|null>();
-        this.lastVisibleReport    =
-            this.lastVisibleReportBus
-                .toProperty(
-                    (() => {
-                        const id      = this.storage.getItem("bnr.last-visible-report.id");
-                        const fromTop = this.storage.getItem("bnr.last-visible-report.from-top");
+    /* The ID of the report entry which was at least partially visible
+     * last time the user scrolled or resized the window. It's null
+     * when no reports were shown at all.
+     */
+    public getLastVisibleEntry(): ReportID|null {
+        return this.storage.getItem("bnr.last-visible-entry");
+    }
 
-                        if (id == null || fromTop == null) {
-                            return null;
-                        }
-                        else {
-                            return {id, fromTop: Number(fromTop)};
-                        }
-                    })());
+    public setLastVisibleEntry(id: ReportID|null): void {
+        if (id) {
+            this.storage.setItem("bnr.last-visible-entry", id);
+        }
+        else {
+            this.storage.removeItem("bnr.last-visible-entry");
+        }
     }
 }

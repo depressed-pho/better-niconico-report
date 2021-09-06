@@ -31,6 +31,11 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
         else if (ev instanceof InsertEntryEvent) {
             reportView.insertEntry(ev.entry);
+
+            const lastVis = configModel.getLastVisibleEntry();
+            if (lastVis && ev.entry.id == lastVis) {
+                reportView.scrollTo(lastVis);
+            }
         }
         else if (ev instanceof ClearEntriesEvent) {
             reportView.clearEntries();
@@ -46,7 +51,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    reportView.lastVisibleEntry.onValue(id => {
-        console.log("last visible:", id);//FIXME
+    reportView.lastVisibleEntryChanged.onValue(id => {
+        configModel.setLastVisibleEntry(id);
     });
 });

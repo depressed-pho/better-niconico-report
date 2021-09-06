@@ -18,12 +18,19 @@ export class ReportView {
      */
     public readonly ctrlRefresh: Bacon.EventStream<null>;
 
-    /** The ID of the last visible report entry in the
-     * viewport. Updated when the contents of the viewport changes,
-     * including resizing and scrolling the window.
+    /** The number of pixels that the content of div.bnr-report is
+     * scrolled vertically or the window is resized.
      */
-    public readonly lastVisibleEntry: Bacon.Property<ReportID|null>;
-    private readonly entryAddedOrRemovedBus: Bacon.Bus<null>;
+    private readonly reportScrolled: Bacon.EventStream<number>;
+
+    /** The ID of the last visible report entry in the
+     * viewport. Updated when the viewport is resized or scrolled, but
+     * not when an entry is inserted or removed.
+     *
+     * THINKME: This is also updated (to null) when the report list is
+     * cleared, because that unintentionally triggers the DOM "scroll"
+     * event. I can't think of a good way to get rid of that. */
+    public readonly lastVisibleEntryChanged: Bacon.EventStream<ReportID|null>;
 
     private readonly progLoading: HTMLProgressElement;
     private readonly tmplReport: HTMLTemplateElement;
@@ -43,17 +50,21 @@ export class ReportView {
         this.divReportEntries = ctx.querySelector<HTMLDivElement>("div.bnr-report-entries")!;
         this.divEndOfReport   = ctx.querySelector<HTMLDivElement>("div.bnr-end-of-report")!;
 
-        this.entryAddedOrRemovedBus = new Bacon.Bus<null>();
-        this.lastVisibleEntry =
+        this.reportScrolled =
             Bacon.mergeAll([
-                Bacon.mergeAll([
-                    Bacon.fromEvent(window, "resize"),
-                    Bacon.fromEvent(this.divReport, "scroll")
-                ]).throttle(200),
-                this.entryAddedOrRemovedBus
+                Bacon.fromEvent(window, "resize"),
+                Bacon.fromEvent(this.divReport, "scroll")
             ]).map(() => {
-                return this.findLastVisibleEntry();
-            }).skipDuplicates().toProperty(null);
+                return this.divReport.scrollTop;
+            }).skipDuplicates();
+
+        this.lastVisibleEntryChanged =
+            this.reportScrolled
+                .throttle(200)
+                .map(() => {
+                    return this.findLastVisibleEntry();
+                })
+                .skipDuplicates();
     }
 
     public resetInsertionPoint(): void {
@@ -91,8 +102,6 @@ export class ReportView {
             const newHiddenHeight = this.divReport.scrollHeight - this.divReport.clientHeight;
             this.divReport.scrollTop = curScrollPos + (newHiddenHeight - oldHiddenHeight);
         }
-
-        this.entryAddedOrRemovedBus.push(null);
     }
 
     private renderEntry(entry: ReportEntry): DocumentFragment {
@@ -101,6 +110,7 @@ export class ReportView {
         // Populate the contents of the entry.
         console.assert(frag.children.length === 1, frag);
         const toplevel = frag.firstElementChild! as HTMLElement;
+        toplevel.id                = `bnr.report.${entry.id}`;
         toplevel.dataset.id        = entry.id;
         toplevel.dataset.timestamp = entry.timestamp.toISOString();
 
@@ -154,7 +164,6 @@ export class ReportView {
         }
         this.reportInsertionPoint = undefined;
         this.divEndOfReport.classList.add("hide");
-        this.entryAddedOrRemovedBus.push(null);
     }
 
     public showEndOfReport(): void {
@@ -267,6 +276,17 @@ export class ReportView {
         }
         else {
             return Visibility.Visible;
+        }
+    }
+
+    /** Scroll the report list so that the report entry with the given
+     * ID is visible. Do nothing if no such report entries are there,
+     * or it's already visible at least partially.
+     */
+    public scrollTo(id: ReportID): void {
+        const el = this.divReport.ownerDocument.getElementById(`bnr.report.${id}`);
+        if (el && this.visibilityOfEntryElement(el) !== Visibility.Visible) {
+            el.scrollIntoView();
         }
     }
 }
