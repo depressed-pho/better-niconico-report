@@ -2,13 +2,28 @@ import * as Bacon from 'baconjs';
 import { DropdownMenu } from 'foundation-sites';
 import * as $ from 'jquery';
 import { parseHTML } from 'nicovideo/parse-html';
-import { ReportEntry } from 'nicovideo/report';
+import { ReportID, ReportEntry } from 'nicovideo/report';
+
+enum Visibility {
+    AboveViewport,
+    Visible,
+    BelowViewport
+}
 
 /* Invariant: there is at most one instance of this class
  * throughout the lifetime of the report page.
  */
 export class ReportView {
+    /** Click events from menu items.
+     */
     public readonly ctrlRefresh: Bacon.EventStream<null>;
+
+    /** The ID of the last visible report entry in the
+     * viewport. Updated when the contents of the viewport changes,
+     * including resizing and scrolling the window.
+     */
+    public readonly lastVisibleEntry: Bacon.Property<ReportID|null>;
+    private readonly entryAddedOrRemovedBus: Bacon.Bus<null>;
 
     private readonly progLoading: HTMLProgressElement;
     private readonly tmplReport: HTMLTemplateElement;
@@ -27,6 +42,18 @@ export class ReportView {
         this.divReport        = ctx.querySelector<HTMLDivElement>("div.bnr-report")!;
         this.divReportEntries = ctx.querySelector<HTMLDivElement>("div.bnr-report-entries")!;
         this.divEndOfReport   = ctx.querySelector<HTMLDivElement>("div.bnr-end-of-report")!;
+
+        this.entryAddedOrRemovedBus = new Bacon.Bus<null>();
+        this.lastVisibleEntry =
+            Bacon.mergeAll([
+                Bacon.mergeAll([
+                    Bacon.fromEvent(window, "resize"),
+                    Bacon.fromEvent(this.divReport, "scroll")
+                ]).throttle(200),
+                this.entryAddedOrRemovedBus
+            ]).map(() => {
+                return this.findLastVisibleEntry();
+            }).skipDuplicates().toProperty(null);
     }
 
     public resetInsertionPoint(): void {
@@ -64,12 +91,19 @@ export class ReportView {
             const newHiddenHeight = this.divReport.scrollHeight - this.divReport.clientHeight;
             this.divReport.scrollTop = curScrollPos + (newHiddenHeight - oldHiddenHeight);
         }
+
+        this.entryAddedOrRemovedBus.push(null);
     }
 
     private renderEntry(entry: ReportEntry): DocumentFragment {
         const frag = this.tmplReport.content.cloneNode(true) as DocumentFragment;
 
         // Populate the contents of the entry.
+        console.assert(frag.children.length === 1, frag);
+        const toplevel = frag.firstElementChild! as HTMLElement;
+        toplevel.dataset.id        = entry.id;
+        toplevel.dataset.timestamp = entry.timestamp.toISOString();
+
         const aUser = frag.querySelector<HTMLAnchorElement>("a.bnr-user")!
         aUser.href = entry.subject.url;
 
@@ -120,6 +154,7 @@ export class ReportView {
         }
         this.reportInsertionPoint = undefined;
         this.divEndOfReport.classList.add("hide");
+        this.entryAddedOrRemovedBus.push(null);
     }
 
     public showEndOfReport(): void {
@@ -141,6 +176,97 @@ export class ReportView {
                 this.progLoading.classList.add("bnr-fast-fade-out");
                 this.progLoading.classList.remove("bnr-fast-fade-in");
             }
+        }
+    }
+
+    /** Find the ID of the report entry which is at least partially
+     * visible now, or null if no entries are shown at all. This
+     * method is very frequently called so it needs to be fast.
+     */
+    private findLastVisibleEntry(): ReportID|null {
+        /* Perform a binary search on the list of report entry
+         * elements. Maybe this isn't fast enough, but I can't think
+         * of a better way. */
+        const elems = this.divReportEntries.children;
+
+        if (elems.length == 0) {
+            return null;
+        }
+        else {
+            let rangeBegin = 0;              // inclusive
+            let rangeEnd   = elems.length-1; // inclusive
+            let foundElem: Element|null = null;
+            loop: while (rangeBegin <= rangeEnd) {
+                const needle = Math.floor((rangeBegin + rangeEnd) / 2);
+                const elem   = elems[needle];
+                const visibi = this.visibilityOfEntryElement(elem);
+                switch (visibi) {
+                    case Visibility.AboveViewport:
+                        rangeBegin = needle + 1;
+                        continue;
+
+                    case Visibility.BelowViewport:
+                        rangeEnd = needle - 1;
+                        continue;
+
+                    case Visibility.Visible:
+                        foundElem = elem;
+                        break loop;
+
+                    default:
+                        throw new Error("Unreachable!");
+                }
+            }
+            if (foundElem) {
+                /* So, we found a visible element but we still don't
+                 * know if it's the last one (probably not). We just
+                 * search for the last one linearly because there
+                 * can't be hundreds of visible elements in the
+                 * viewport. */
+                let lastElem = foundElem;
+                while (true) {
+                    const nextElem = lastElem.nextElementSibling;
+                    if (nextElem &&
+                        this.visibilityOfEntryElement(nextElem) === Visibility.Visible) {
+                        lastElem = nextElem;
+                        continue;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                return (lastElem as HTMLElement).dataset.id!;
+            }
+            else {
+                /* There are some report entries but none are
+                 * visible. This can only happen when the window is
+                 * extremely narrow. */
+                return null;
+            }
+        }
+    }
+
+    /** Check if a given element is at least partially visible. This
+     * is a faster and simplified version of the solution shown in
+     * https://stackoverflow.com/a/21627295 but exploits our specific
+     * DOM structure.
+     */
+    private visibilityOfEntryElement(el: Element): Visibility {
+        const elRect = el.getBoundingClientRect();
+        const vpRect = this.divReport.getBoundingClientRect();
+
+        if (elRect.bottom < vpRect.top) {
+            /* The element is above the visible part of its scrollable
+             * ancestor. */
+            return Visibility.AboveViewport;
+        }
+        else if (elRect.top > vpRect.bottom) {
+            /* The element is below the visible part of its scrollable
+             * ancestor. */
+            return Visibility.BelowViewport;
+        }
+        else {
+            return Visibility.Visible;
         }
     }
 }

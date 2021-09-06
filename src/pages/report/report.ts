@@ -45,4 +45,8 @@ window.addEventListener('DOMContentLoaded', async () => {
             throw new Error("Unknown type of ReportEvent: " + ev.constructor.name);
         }
     });
+
+    reportView.lastVisibleEntry.onValue(id => {
+        console.log("last visible:", id);//FIXME
+    });
 });
