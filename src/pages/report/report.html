@@ -75,13 +75,9 @@
             </div>
 
             <template data-for="report">
-              <!-- This element will have the following data
-                   attributes assigned by ReportView:
-
-                   * data-id="report ID"
-                   * data-timestamp="report timestamp"
-
-                   It also gets id="bnr.report.{ID}" assigned.
+              <!-- This element will have attributes
+                   id="bnr.report.{ReportID}" and data-id="{ReportID}"
+                   assigned by ReportView.
               -->
               <div class="cell card">
                 <div class="card-section">
@@ -90,7 +86,7 @@
                     <!-- An entry header has a user icon, their name,
                          and a muting menu. -->
                     <div class="cell grid-x">
-                      <div class="cell auto">
+                      <div class="cell auto" lang="ja" xml:lang="ja">
                         <a class="bnr-user" target="_blank">
                           <img class="bnr-user-icon" />
                           <span class="bnr-user-name"></span>
@@ -118,7 +114,7 @@
                          title. -->
                     <div class="cell grid-y bnr-report-body">
                       <!-- Entry title and timestamp -->
-                      <div class="cell grid-x">
+                      <div class="cell grid-x" lang="ja" xml:lang="ja">
                         <div class="cell auto bnr-report-title"></div>
                         <div class="cell shrink bnr-report-timestamp"></div>
                       </div>
@@ -138,7 +134,7 @@
                             <span class="bnr-object-type"></span>
                           </div>
                           <!-- Object title -->
-                          <div class="cell">
+                          <div class="cell" lang="ja" xml:lang="ja">
                             <a class="bnr-object-anchor" target="_blank">
                               <span class="bnr-object-title"></span>
                             </a>

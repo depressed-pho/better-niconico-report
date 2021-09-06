@@ -110,9 +110,8 @@ export class ReportView {
         // Populate the contents of the entry.
         console.assert(frag.children.length === 1, frag);
         const toplevel = frag.firstElementChild! as HTMLElement;
-        toplevel.id                = `bnr.report.${entry.id}`;
-        toplevel.dataset.id        = entry.id;
-        toplevel.dataset.timestamp = entry.timestamp.toISOString();
+        toplevel.id         = `bnr.report.${entry.id}`;
+        toplevel.dataset.id = entry.id;
 
         const aUser = frag.querySelector<HTMLAnchorElement>("a.bnr-user")!
         aUser.href = entry.subject.url;
@@ -156,6 +155,18 @@ export class ReportView {
         new DropdownMenu($(menuMuting))
 
         return frag;
+    }
+
+    private findEntry(id: ReportID): Element|null {
+        return this.divReport.ownerDocument.getElementById(`bnr.report.${id}`);
+    }
+
+    public deleteEntry(id: ReportID): void {
+        const el = this.findEntry(id);
+        if (el) {
+            console.info("Report entry expired:", el);
+            el.parentNode!.removeChild(el);
+        }
     }
 
     public clearEntries() {
@@ -280,12 +291,11 @@ export class ReportView {
     }
 
     /** Scroll the report list so that the report entry with the given
-     * ID is visible. Do nothing if no such report entries are there,
-     * or it's already visible at least partially.
+     * ID is visible. Do nothing if no such report entries are there.
      */
     public scrollTo(id: ReportID): void {
-        const el = this.divReport.ownerDocument.getElementById(`bnr.report.${id}`);
-        if (el && this.visibilityOfEntryElement(el) !== Visibility.Visible) {
+        const el = this.findEntry(id);
+        if (el) {
             el.scrollIntoView();
         }
     }

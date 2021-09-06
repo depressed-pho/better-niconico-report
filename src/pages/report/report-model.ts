@@ -4,7 +4,7 @@ import { ReportID, ReportChunk, ReportEntry, getReportChunk } from 'nicovideo/re
 import { ConfigModel } from './config-model';
 import { ReportDatabase } from './report-db';
 
-const DEBUG_FETCH_ONLY_THE_FIRST_CHUNK = true;
+const DEBUG_FETCH_ONLY_THE_FIRST_CHUNK = false;
 
 export class ReportEvent {}
 
@@ -19,6 +19,13 @@ export class ResetInsertionPointEvent extends ReportEvent {
 export class InsertEntryEvent extends ReportEvent {
     public constructor(public readonly entry: ReportEntry) { super() }
 }
+
+/** Delete a report entry with the given ID.
+ */
+export class DeleteEntryEvent extends ReportEvent {
+    public constructor(public readonly id: ReportID) { super() }
+}
+
 
 /** Show the "end of report" marker.
  */
@@ -111,6 +118,34 @@ export class ReportModel {
         });
     }
 
+    private standardExpirationDate(): Date {
+        const d = new Date();
+        d.setMonth(d.getMonth()-1, d.getDate());
+        // The beginning of the day. The upstream uses this for
+        // whatever reason.
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    /** Get the expiration date of reports based on the current
+     * time. It is either 1 month ago from now, or 1 day ago from the
+     * last visible entry, whichever is earlier. */
+    private async expirationDate(): Promise<Date> {
+        const expireAt = this.standardExpirationDate();
+
+        const lastVis = this.config.getLastVisibleEntry();
+        if (lastVis) {
+            const entry = await this.database.lookup(lastVis);
+            if (entry) {
+                const d = new Date(entry.timestamp.getTime());
+                d.setDate(d.getDate()-1); // FIXME: should be configurable
+                return d.getTime() < expireAt.getTime() ? d : expireAt;
+            }
+        }
+
+        return expireAt;
+    }
+
     /** Create a stream of ReportEvent reading all the report entries
      * in the database.
      */
@@ -120,9 +155,17 @@ export class ReportModel {
             const promise = (async () => {
                 // FIXME: apply filter
                 sink(new Bacon.Next(new UpdateProgressEvent(0)));
-                await this.database.tx("r", async () => {
+                await this.database.tx("rw", async () => {
+                    /* Purge old entries before reading anything. We
+                     * don't have to mess with DeleteEntryEvent
+                     * because no entries are displayed at this
+                     * point. */
+                    const expireAt = await this.expirationDate();
+                    await this.database.purge(expireAt);
+
                     const total = await this.database.count();
                     let   count = 0;
+                    console.info("Loading %d entries from the database...", total);
                     await this.database.each((entry) => {
                         count++;
                         sink(new Bacon.Next(new InsertEntryEvent(entry)));
@@ -162,53 +205,68 @@ export class ReportModel {
         return Bacon.fromBinder(sink => {
             let   abort   = false;
             const promise = (async () => {
-                /* Some work for displaying the progress bar. */
+                /* Purge old entries before posting requests. */
+                this.database.tx("rw", async () => {
+                    const expireAt = await this.expirationDate();
+                    await this.database.purge(expireAt, entry => {
+                        sink(new Bacon.Next(new DeleteEntryEvent(entry.id)));
+                    });
+                });
+
+                /* Some work for displaying the progress bar. This
+                 * doesn't need to be in a transaction because it's
+                 * only informational. */
                 const started    : number = Date.now();
                 const expectedEnd: number = await (async () => {
                     const newest = await this.database.newest();
                     if (newest) {
-                        console.debug("The timestamp of the newest entry in the database is ", newest.timestamp);
+                        console.debug(
+                            "The timestamp of the newest entry in the database is ", newest.timestamp);
                         return newest.timestamp.getTime();
                     }
                     else {
-                        const d = new Date();
-                        d.setMonth(d.getMonth()-1, d.getDate());
-                        d.setHours(0, 0, 0, 0);
+                        const d = this.standardExpirationDate();
                         console.debug("The timestamp of the last available entry is expected to be", d);
                         return d.getTime();
                     }
                 })();
                 sink(new Bacon.Next(new UpdateProgressEvent(0)));
 
+                /* Fetching the entire report takes very long, it can
+                 * be very large, but we still have to store them to
+                 * the database all at once nevertheless because
+                 * otherwise we may end up in an inconsistent
+                 * state. So we buffer all the entries and store them
+                 * afterwards. */
+                const newEntries: ReportEntry[] = [];
                 let skipDownTo: ReportID|undefined;
-                let numNewEntries = 0;
-                while (true) {
+
+                loop: while (true) {
                     if (abort) {
                         console.debug("Got an abort request. Exiting...");
-                        return;
+                        break;
                     }
+
                     console.debug(
                         "Requesting a chunk of report " +
                             (skipDownTo ? `skipping down to ${skipDownTo}.` : "from the beginning."));
-
                     const chunk = await this.fetchChunkFromServer(skipDownTo);
-
                     console.debug(
                         "Got a chunk containing %i report entries.", chunk.entries.length);
 
                     for (const entry of chunk.entries) {
-                        if (!await this.database.tryInsert(entry)) {
+                        if (await this.database.exists(entry.id)) {
                             console.debug(
                                 "Found an entry which was already in our database: %s", entry.id);
                             console.debug(
-                                "We got %d new entries from the server.", numNewEntries);
-                            return;
+                                "We got %d new entries from the server.", newEntries.length);
+                            break loop;
                         }
                         // FIXME: Filter entries before sending them to the bus.
                         sink(new Bacon.Next(new InsertEntryEvent(entry)));
                         sink(new Bacon.Next(new UpdateProgressEvent(
                             (started - entry.timestamp.getTime()) / (started - expectedEnd))));
-                        numNewEntries++;
+                        newEntries.push(entry);
                     }
 
                     if (chunk.hasNext) {
@@ -225,19 +283,23 @@ export class ReportModel {
                             })
                             .firstToPromise();
                         if (DEBUG_FETCH_ONLY_THE_FIRST_CHUNK) {
-                            return;
+                            break loop;
                         }
                         else {
-                            continue;
+                            continue loop;
                         }
                     }
                     else {
                         console.debug("It was the last report chunk available.");
-                        console.debug("We got %d entries from the server.", numNewEntries);
+                        console.debug("We got %d entries from the server.", newEntries.length);
                         sink(new Bacon.Next(new ShowEndOfReportEvent()));
-                        return;
+                        break loop;
                     }
                 }
+
+                await this.database.tx("rw", async () => {
+                    await this.database.bulkPut(newEntries);
+                });
             })();
             promise
                 .catch(e => {

@@ -3,8 +3,9 @@ import * as $ from 'jquery';
 import '../pages.scss';
 import './report.scss';
 import { ConfigModel } from './config-model';
-import { ResetInsertionPointEvent, InsertEntryEvent, ShowEndOfReportEvent,
-         ClearEntriesEvent, UpdateProgressEvent, ReportModel
+import { ResetInsertionPointEvent, InsertEntryEvent, DeleteEntryEvent,
+         ShowEndOfReportEvent, ClearEntriesEvent, UpdateProgressEvent,
+         ReportModel
        } from './report-model';
 import { ReportView } from './report-view';
 import { signIn } from '../sign-in/sign-in';
@@ -36,6 +37,9 @@ window.addEventListener('DOMContentLoaded', async () => {
             if (lastVis && ev.entry.id == lastVis) {
                 reportView.scrollTo(lastVis);
             }
+        }
+        else if (ev instanceof DeleteEntryEvent) {
+            reportView.deleteEntry(ev.id);
         }
         else if (ev instanceof ClearEntriesEvent) {
             reportView.clearEntries();

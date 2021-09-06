@@ -18,6 +18,12 @@ export class ReportDatabase extends Dexie {
         return await this.transaction(mode as any, this.entries, fn);
     }
 
+    /** Upsert entries in bulk. This isn't an atomic operation. Use
+     * tx() if you want atomicity. */
+    public async bulkPut(entries: ReportEntry[]): Promise<void> {
+        await this.entries.bulkPut(entries);
+    }
+
     /** Try inserting a report entry. Return true if it wasn't already
      * there, or false otherwise.
      */
@@ -49,11 +55,45 @@ export class ReportDatabase extends Dexie {
         return res.length ? res[0] : null;
     }
 
+    /** Lookup an entry with the given ID in the database, or null if no
+     * such entries are there.
+     */
+    public async lookup(id: ReportID): Promise<ReportEntry|null> {
+        const res = await this.entries.get(id);
+        return res ? res : null;
+    }
+
+    /** A variant of lookup() which returns boolean.
+     */
+    public async exists(id: ReportID): Promise<boolean> {
+        return !!await this.lookup(id);
+    }
+
     /** Iterate on all the report entries in the database, sorted by
      * their timestamp in the reverse order.
      */
     public async each(f: (entry: ReportEntry) => void): Promise<void> {
         await this.entries.orderBy("timestamp").reverse().each(f);
+    }
+
+    /** Iterate on report entries which are older than the given date,
+     * and remove them from the database. The callback function can be
+     * omitted.
+     */
+    public async purge(olderThan: Date, f?: (entry: ReportEntry) => void): Promise<void> {
+        const coll = this.entries.where("timestamp").below(olderThan);
+        if (f) {
+            /* THINKME: Currently we can't use coll.modify() because
+             * "delete ref.value" doesn't typecheck due to an issue in
+             * its type signature. */
+            await this.tx("rw", async () => {
+                await coll.each(f);
+                await coll.delete();
+            });
+        }
+        else {
+            await coll.delete();
+        }
     }
 
     /** Clear the entire database. */
