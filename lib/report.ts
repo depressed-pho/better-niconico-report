@@ -2,8 +2,8 @@ import { UnauthorizedError } from 'nicovideo/errors';
 
 export type ReportID = string;
 export type Action =
-    "advertised" | "reserved-broadcast" | "broadcasted" | "got-magic-number" |
-    "liked" | "listed" | "uploaded" | "unknown";
+    "advertise" | "reserve-broadcast" | "broadcast" | "get-magic-number" |
+    "like" | "list" | "upload" | "unknown";
 
 export interface ReportChunk {
     newestID: ReportID,
@@ -100,30 +100,30 @@ function parseAction(trigger: string): Action {
         case "program.nicoad_user_advertise_program":
         case "solid.nicoad_user_advertise_solid":
         case "video.nicoad_user_advertise_video":
-            return "advertised";
+            return "advertise";
 
         case "program.live_channel_program_reserve":
         case "program.live_user_program_reserve":
         case "program.live_user_program_video_live_reserve":
-            return "reserved-broadcast";
+            return "reserve-broadcast";
 
         case "program.live_channel_program_onairs":
         case "program.live_user_program_onairs":
         case "program.live_user_program_video_live_onairs":
-            return "broadcasted";
+            return "broadcast";
 
         case "video.nicovideo_user_video_kiriban_play":
-            return "got-magic-number";
+            return "get-magic-number";
 
         case "video.nicovideo_video_first_liked_by_user":
-            return "liked";
+            return "like";
 
         case "community.nicommunity_user_video_registered":
         case "illustImage.nicoseiga_user_illust_clip":
         case "mangaContent.nicoseiga_user_manga_content_favorite":
         case "mylist.nicovideo_user_mylist_add_video":
         case "solid.nicovideo_user_solid_favorite":
-            return "listed";
+            return "list";
 
         case "channelArticle.nicovideo_user_blomaga_upload":
         case "channelArticle.blomaga_channel_channel_article_publish":
@@ -134,7 +134,7 @@ function parseAction(trigger: string): Action {
         case "solid.nicovideo_user_solid_upload":
         case "video.nicovideo_channel_video_upload":
         case "video.nicovideo_user_video_upload":
-            return "uploaded";
+            return "upload";
 
         default:
             console.warn("Unknown action:", trigger);

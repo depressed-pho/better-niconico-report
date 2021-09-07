@@ -1,7 +1,7 @@
 # -*- org -*-
 
-* TODO [#A] Purge old entries both from the database and the page
-* TODO [#A] Change the title (or background) color depending on the action
 * TODO [#A] Reload button on the top bar
 * TODO [#B] Hover on a thumbnail to show a bigger image
+* DONE [#A] Purge old entries both from the database and the page
 * DONE [#A] End of the report marker
+* DONE [#A] Change the title (or background) color depending on the action

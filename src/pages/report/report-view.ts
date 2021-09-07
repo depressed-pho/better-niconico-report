@@ -112,6 +112,7 @@ export class ReportView {
         const toplevel = frag.firstElementChild! as HTMLElement;
         toplevel.id         = `bnr.report.${entry.id}`;
         toplevel.dataset.id = entry.id;
+        toplevel.classList.add(`bnr-action-${entry.action}`);
 
         const aUser = frag.querySelector<HTMLAnchorElement>("a.bnr-user")!
         aUser.href = entry.subject.url;
@@ -199,9 +200,9 @@ export class ReportView {
         }
     }
 
-    /** Find the ID of the report entry which is at least partially
-     * visible now, or null if no entries are shown at all. This
-     * method is very frequently called so it needs to be fast.
+    /** Find the ID of the report entry which is fully visible now, or
+     * null if no entries are shown at all. This method is very
+     * frequently called so it needs to be fast.
      */
     private findLastVisibleEntry(): ReportID|null {
         /* Perform a binary search on the list of report entry
@@ -266,8 +267,8 @@ export class ReportView {
         }
     }
 
-    /** Check if a given element is at least partially visible. This
-     * is a faster and simplified version of the solution shown in
+    /** Check if a given element is fully visible. This is a faster
+     * and simplified version of the solution shown in
      * https://stackoverflow.com/a/21627295 but exploits our specific
      * DOM structure.
      */
@@ -275,12 +276,12 @@ export class ReportView {
         const elRect = el.getBoundingClientRect();
         const vpRect = this.divReport.getBoundingClientRect();
 
-        if (elRect.bottom < vpRect.top) {
+        if (elRect.top < vpRect.top) {
             /* The element is above the visible part of its scrollable
              * ancestor. */
             return Visibility.AboveViewport;
         }
-        else if (elRect.top > vpRect.bottom) {
+        else if (elRect.bottom > vpRect.bottom) {
             /* The element is below the visible part of its scrollable
              * ancestor. */
             return Visibility.BelowViewport;

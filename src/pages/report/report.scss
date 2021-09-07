@@ -45,6 +45,38 @@ $object-thumb-height: 63px;
     }
 }
 
+/* TODO: These should be customizable, i.e. these styles should be
+   dynamically generated and applied. */
+.bnr-action-advertise {
+    background-color: hsl(158,100,95);
+}
+.bnr-action-reserve-broadcast {
+    background-color: hsl(25,100,96);
+    .bnr-report-title {
+        color: hsl(25, 60, 51);
+    }
+}
+.bnr-action-broadcast {
+    background-color: hsl(25,100,91);
+    .bnr-report-title {
+        color: hsl(25, 60, 46);
+        font-weight: bold;
+    }
+}
+.bnr-action-like {
+    background-color: hsl(102,100,95);
+}
+.bnr-action-list {
+    background-color: hsl(64,100,95);
+}
+.bnr-action-upload {
+    background-color: hsl(0, 100, 91);
+    .bnr-report-title {
+        color: hsl(0, 60, 46);
+        font-weight: bold;
+    }
+}
+
 .bnr-user-icon {
     width: $user-icon-width;
     height: $user-icon-height;
