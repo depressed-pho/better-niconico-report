@@ -3,6 +3,7 @@
 * TODO [#A] Configuration panel
 * TODO [#A] Filtering
 * TODO [#B] Hover on a thumbnail to show a bigger image
+* TODO [#A] Automatic update should be able to be disabled
 * DONE [#A] Reload button on the top bar
 * DONE [#A] Purge old entries both from the database and the page
 * DONE [#A] End of the report marker
