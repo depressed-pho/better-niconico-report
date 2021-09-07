@@ -14,9 +14,13 @@ enum Visibility {
  * throughout the lifetime of the report page.
  */
 export class ReportView {
+    /** Click events from the "Check for updates" button.
+     */
+    public readonly updateRequested: Bacon.EventStream<null>;
+
     /** Click events from menu items.
      */
-    public readonly ctrlRefresh: Bacon.EventStream<null>;
+    public readonly refreshRequested: Bacon.EventStream<null>;
 
     /** The number of pixels that the content of div.bnr-report is
      * scrolled vertically or the window is resized.
@@ -32,6 +36,7 @@ export class ReportView {
      * event. I can't think of a good way to get rid of that. */
     public readonly lastVisibleEntryChanged: Bacon.EventStream<ReportID|null>;
 
+    private readonly btnUpdate: HTMLElement;
     private readonly progLoading: HTMLProgressElement;
     private readonly tmplReport: HTMLTemplateElement;
     private readonly divReport: HTMLDivElement;
@@ -40,9 +45,12 @@ export class ReportView {
     private reportInsertionPoint?: Element;
 
     public constructor(ctx = document) {
-        const menu       = document.querySelector<HTMLElement>(".menu[data-for='control']")!;
-        const miRefresh  = menu.querySelector<HTMLAnchorElement>("a[data-for='refresh']")!;
-        this.ctrlRefresh = Bacon.fromEvent(miRefresh, "click").map(Bacon.constant(null));
+        const topBar          = document.querySelector<HTMLDivElement>("div.top-bar")!;
+        this.btnUpdate        = document.querySelector<HTMLElement>("*[data-for='check-for-updates']")!;
+        this.updateRequested  = Bacon.fromEvent(this.btnUpdate, "click").map(Bacon.constant(null));
+        const menuCtrl        = topBar.querySelector<HTMLElement>(".menu[data-for='control']")!;
+        const miRefresh       = menuCtrl.querySelector<HTMLAnchorElement>("a[data-for='refresh']")!;
+        this.refreshRequested = Bacon.fromEvent(miRefresh, "click").map(Bacon.constant(null));
 
         this.progLoading      = ctx.querySelector<HTMLProgressElement>("progress.bnr-loading-progress")!;
         this.tmplReport       = ctx.querySelector<HTMLTemplateElement>("template[data-for='report']")!;
@@ -165,7 +173,7 @@ export class ReportView {
     public deleteEntry(id: ReportID): void {
         const el = this.findEntry(id);
         if (el) {
-            console.info("Report entry expired:", el);
+            console.info("Report entry expired:", id);
             el.parentNode!.removeChild(el);
         }
     }
@@ -298,6 +306,15 @@ export class ReportView {
         const el = this.findEntry(id);
         if (el) {
             el.scrollIntoView();
+        }
+    }
+
+    public setUpdatingAllowed(isAllowed: boolean): void {
+        if (isAllowed) {
+            this.btnUpdate.classList.remove("disabled");
+        }
+        else {
+            this.btnUpdate.classList.add("disabled");
         }
     }
 }

@@ -5,11 +5,18 @@ $dropdownmenu-arrows: false;
 $topbar-padding: 0.1rem;
 $progress-margin-bottom: 0;
 
-.menu a {
-    cursor: pointer;
+.menu {
+    a {
+        cursor: pointer;
+    }
+    li:hover {
+        @extend .is-active;
+    }
 }
-.menu li:hover {
-    @extend .is-active;
+.top-bar .menu {
+    .fi {
+        font-size: 150%;
+    }
 }
 
 /* Motion UI */

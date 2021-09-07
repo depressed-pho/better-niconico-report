@@ -5,7 +5,7 @@ import './report.scss';
 import { ConfigModel } from './config-model';
 import { ResetInsertionPointEvent, InsertEntryEvent, DeleteEntryEvent,
          ShowEndOfReportEvent, ClearEntriesEvent, UpdateProgressEvent,
-         ReportModel
+         SetUpdatingAllowed, ReportModel
        } from './report-model';
 import { ReportView } from './report-view';
 import { signIn } from '../sign-in/sign-in';
@@ -21,8 +21,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     const reportModel = new ReportModel(configModel, signIn);
     const reportView = new ReportView();
 
+    /* Setup the "Check for updates" button on the top bar. */
+    reportView.updateRequested.onValue(() => reportModel.checkForUpdates());
+
     /* Setup the control menu on the top bar. */
-    reportView.ctrlRefresh.onValue(() => reportModel.refresh());
+    reportView.refreshRequested.onValue(() => reportModel.refresh());
 
     /* It is our responsible for interpreting the report events coming
      * from the model. */
@@ -49,6 +52,9 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
         else if (ev instanceof UpdateProgressEvent) {
             reportView.updateProgress(ev.progress);
+        }
+        else if (ev instanceof SetUpdatingAllowed) {
+            reportView.setUpdatingAllowed(ev.isAllowed);
         }
         else {
             throw new Error("Unknown type of ReportEvent: " + ev.constructor.name);

@@ -26,10 +26,13 @@
               <progress class="bnr-loading-progress bnr-transparent" max="1" />
             </li>
             <li>
-              <ul class="dropdown menu"
-                  data-dropdown-menu=""
-                  data-disable-hover="true"
-                  data-click-open="true">
+              <!-- The update button is initially disabled. -->
+              <a class="button clear disabled" data-for="check-for-updates" title="Check for updates">
+                <i class="fi fi-refresh"></i>
+              </a>
+            </li>
+            <li>
+              <ul class="dropdown menu" data-dropdown-menu="">
                 <li class="is-dropdown-submenu-parent">
                   <a>
                     <i class="fi fi-widget"></i>
@@ -96,9 +99,7 @@
                         </a>
                       </div>
                       <div class="cell shrink">
-                        <ul class="menu bnr-muting"
-                            data-disable-hover="true"
-                            data-click-open="true">
+                        <ul class="menu bnr-muting">
                           <li class="is-dropdown-submenu-parent">
                             <a>
                               <i class="fi fi-list"></i>

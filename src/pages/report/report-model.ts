@@ -45,6 +45,12 @@ export class UpdateProgressEvent extends ReportEvent {
     public constructor(public readonly progress: number) { super() }
 }
 
+/** Enable or disable the update button.
+*/
+export class SetUpdatingAllowed extends ReportEvent {
+    public constructor(public readonly isAllowed: boolean) { super() }
+}
+
 export class ReportModel {
     private readonly config: ConfigModel;
     private readonly database: ReportDatabase;
@@ -53,6 +59,10 @@ export class ReportModel {
      * list. */
     private readonly reportEventBus: Bacon.Bus<ReportEvent>;
     public readonly reportEvents: Bacon.EventStream<ReportEvent>;
+
+    /* Events telling the model to trigger checking for updates.
+     */
+    private readonly updateRequested: Bacon.Bus<null>;
 
     /* An async function to authenticate the user.
      */
@@ -63,11 +73,12 @@ export class ReportModel {
     private unplugReportSource?: () => void;
 
     public constructor(config: ConfigModel, authenticate: () => Promise<void>) {
-        this.config         = config;
-        this.authenticate   = authenticate;
-        this.database       = new ReportDatabase();
-        this.reportEventBus = new Bacon.Bus<ReportEvent>();
-        this.reportEvents   = this.reportEventBus.toEventStream();
+        this.config          = config;
+        this.authenticate    = authenticate;
+        this.database        = new ReportDatabase();
+        this.reportEventBus  = new Bacon.Bus<ReportEvent>();
+        this.reportEvents    = this.reportEventBus.toEventStream();
+        this.updateRequested = new Bacon.Bus<null>();
 
         this.reportEventBus.plug(this.spawnReportSource());
     }
@@ -93,27 +104,23 @@ export class ReportModel {
                     return this.fetchFromServer();
 
                 default:
-                    // FIXME: We should be responding to interval
-                    // changes even while in silence.
-                    return this.config
-                            .intervalBetweenPolling
-                            .first()
-                            .flatMap(interval => {
-                                return Bacon.repeat(i => {
-                                    switch (i) {
-                                        case 0:
-                                            console.debug(
-                                                "We are going to poll the server for updates after %f seconds.", interval);
-                                            return Bacon.silence(interval * 1000);
-
-                                        case 1:
-                                            return this.fetchFromServer();
-
-                                        default:
-                                            return undefined;
-                                    }
-                                });
-                            });
+                    // Construct an EventStream which emits null after
+                    // some interval. Downstream can stop waiting on
+                    // its first event. This is so that we can respond
+                    // to interval changes even while in the interval.
+                    const intervalStartedAt = Date.now();
+                    const interval =
+                        Bacon.mergeAll([
+                            this.config.intervalBetweenPolling,
+                            this.updateRequested.map(() => 0)
+                        ]).flatMap(delay => {
+                            const delayedSoFar = Date.now() - intervalStartedAt;
+                            const remaining    = Math.max(0, delay * 1000 - delayedSoFar);
+                            console.debug(
+                                "We are going to poll the server for updates after %f seconds.", remaining / 1000);
+                            return Bacon.later(remaining, null);
+                        });
+                    return interval.first().flatMap(() => this.fetchFromServer());
             }
         });
     }
@@ -154,6 +161,7 @@ export class ReportModel {
             let   abort   = false;
             const promise = (async () => {
                 // FIXME: apply filter
+                sink(new Bacon.Next(new SetUpdatingAllowed(false)));
                 sink(new Bacon.Next(new UpdateProgressEvent(0)));
                 await this.database.tx("rw", async () => {
                     /* Purge old entries before reading anything. We
@@ -205,6 +213,9 @@ export class ReportModel {
         return Bacon.fromBinder(sink => {
             let   abort   = false;
             const promise = (async () => {
+                sink(new Bacon.Next(new SetUpdatingAllowed(false)));
+                sink(new Bacon.Next(new UpdateProgressEvent(0)));
+
                 /* Purge old entries before posting requests. */
                 this.database.tx("rw", async () => {
                     const expireAt = await this.expirationDate();
@@ -230,7 +241,6 @@ export class ReportModel {
                         return d.getTime();
                     }
                 })();
-                sink(new Bacon.Next(new UpdateProgressEvent(0)));
 
                 /* Fetching the entire report takes very long, it can
                  * be very large, but we still have to store them to
@@ -271,17 +281,23 @@ export class ReportModel {
 
                     if (chunk.hasNext) {
                         skipDownTo = chunk.oldestID;
-                        // FIXME: We should be responding to interval
-                        // changes even while in silence.
-                        await this.config
-                            .delayBetweenConsecutiveFetch
-                            .first()
-                            .flatMap(delay => {
-                                console.debug(
-                                    "We are going to fetch the next chunk after %f seconds.", delay);
-                                return Bacon.later(delay * 1000, null);
-                            })
-                            .firstToPromise();
+
+                        // Construct an EventStream which emits null
+                        // after some interval. Downstream can stop
+                        // waiting on its first event. This is so that
+                        // we can respond to interval changes even while
+                        // in the interval.
+                        const intervalStartedAt = Date.now();
+                        const interval =
+                            this.config.delayBetweenConsecutiveFetch
+                                .flatMap(delay => {
+                                    const delayedSoFar = Date.now() - intervalStartedAt;
+                                    const remaining    = Math.max(0, delay * 1000 - delayedSoFar);
+                                    console.debug(
+                                        "We are going to fetch the next chunk after %f seconds.", remaining / 1000);
+                                    return Bacon.later(remaining, null);
+                                });
+                        await interval.firstToPromise();
                         if (DEBUG_FETCH_ONLY_THE_FIRST_CHUNK) {
                             break loop;
                         }
@@ -309,6 +325,7 @@ export class ReportModel {
                 .then(() => {
                     sink(new Bacon.Next(new ResetInsertionPointEvent()));
                     sink(new Bacon.Next(new UpdateProgressEvent(1)));
+                    sink(new Bacon.Next(new SetUpdatingAllowed(true)));
                     sink(new Bacon.End());
                 });
             return () => {
@@ -336,6 +353,13 @@ export class ReportModel {
                 }
             }
         }
+    }
+
+    /* Check for updates immediately, without waiting for the
+     * automatic update timer.
+     */
+    public checkForUpdates(): void {
+        this.updateRequested.push(null);
     }
 
     /* Discard all the entries in the database and reload them from
