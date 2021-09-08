@@ -1,10 +1,11 @@
 import * as Bacon from 'baconjs';
 import { UnauthorizedError } from 'nicovideo/errors';
 import { ReportID, ReportChunk, ReportEntry, getReportChunk } from 'nicovideo/report';
+import { FilterAction, FilterRuleSet } from 'nicovideo/report/filter';
 import { ConfigModel } from './config-model';
 import { ReportDatabase } from './report-db';
 
-const DEBUG_FETCH_ONLY_THE_FIRST_CHUNK = true;
+const DEBUG_FETCH_ONLY_THE_FIRST_CHUNK = false;
 
 export class ReportEvent {}
 
@@ -53,34 +54,41 @@ export class SetUpdatingAllowed extends ReportEvent {
 
 export class ReportModel {
     private readonly config: ConfigModel;
+    private readonly filterRules: FilterRuleSet;
     private readonly database: ReportDatabase;
 
-    /* Events telling the ReportView to what to do about the entry
-     * list. */
+    /** Events telling the ReportView to what to do about the entry
+     * list.
+     */
     private readonly reportEventBus: Bacon.Bus<ReportEvent>;
     public readonly reportEvents: Bacon.EventStream<ReportEvent>;
 
-    /* Events telling the model to trigger checking for updates.
+    /** Events telling the model to trigger checking for updates.
      */
     private readonly updateRequested: Bacon.Bus<null>;
 
-    /* An async function to authenticate the user.
+    /** An async function to authenticate the user.
      */
     private authenticate: () => Promise<void>;
 
-    /* A function to unplug the currently active report source. Called
-     * on refresh. */
+    /** A function to unplug the currently active report
+     * source. Called on refresh.
+     */
     private unplugReportSource?: () => void;
 
-    public constructor(config: ConfigModel, authenticate: () => Promise<void>) {
+    public constructor(config: ConfigModel,
+                       filterRules: FilterRuleSet,
+                       authenticate: () => Promise<void>) {
         this.config          = config;
+        this.filterRules     = filterRules;
         this.authenticate    = authenticate;
         this.database        = new ReportDatabase();
         this.reportEventBus  = new Bacon.Bus<ReportEvent>();
         this.reportEvents    = this.reportEventBus.toEventStream();
         this.updateRequested = new Bacon.Bus<null>();
 
-        this.reportEventBus.plug(this.spawnReportSource());
+        this.unplugReportSource =
+            this.reportEventBus.plug(this.spawnReportSource());
     }
 
     private spawnReportSource(): Bacon.EventStream<ReportEvent> {
@@ -160,34 +168,44 @@ export class ReportModel {
         return Bacon.fromBinder(sink => {
             let   abort   = false;
             const promise = (async () => {
-                // FIXME: apply filter
                 sink(new Bacon.Next(new SetUpdatingAllowed(false)));
                 sink(new Bacon.Next(new UpdateProgressEvent(0)));
+                /* Purge old entries before reading anything. We don't
+                 * have to mess with DeleteEntryEvent because no
+                 * entries are displayed at this point. */
                 await this.database.tx("rw", async () => {
-                    /* Purge old entries before reading anything. We
-                     * don't have to mess with DeleteEntryEvent
-                     * because no entries are displayed at this
-                     * point. */
                     const expireAt = await this.expirationDate();
                     await this.database.purge(expireAt);
-
-                    const total = await this.database.count();
-                    let   count = 0;
-                    console.info("Loading %d entries from the database...", total);
-                    await this.database.each((entry) => {
-                        count++;
-                        sink(new Bacon.Next(new InsertEntryEvent(entry)));
-                        sink(new Bacon.Next(new UpdateProgressEvent(count / total)));
-                    });
-                    if (total > 0) {
-                        /* We are going to fetch the report from the
-                         * server, but since the database wasn't empty,
-                         * there won't be any reports older than the ones
-                         * in the database. */
-                        sink(new Bacon.Next(new ShowEndOfReportEvent()));
-                    }
-                    sink(new Bacon.Next(new UpdateProgressEvent(1)));
                 });
+                /* Note that we can't do it in a big transaction
+                 * because we have to touch two databases at the same
+                 * time. */
+                const entries   = await this.database.toArray();
+                const total     = entries.length;
+                let   count     = 0;
+                let   nFiltered = 0;
+                console.info("Loading %d entries from the database...", total);
+                for (const entry of entries) {
+                    count++;
+                    if (await this.filterRules.apply(entry) === FilterAction.Show) {
+                        sink(new Bacon.Next(new InsertEntryEvent(entry)));
+                    }
+                    else {
+                        nFiltered++;
+                    }
+                    sink(new Bacon.Next(new UpdateProgressEvent(count / total)));
+                }
+                if (nFiltered > 0) {
+                    console.log("Filtered out %d entries in the database.", nFiltered);
+                }
+                if (total > 0) {
+                    /* We are going to fetch the report from the
+                     * server, but since the database wasn't empty,
+                     * there won't be any reports older than the ones
+                     * in the database. */
+                    sink(new Bacon.Next(new ShowEndOfReportEvent()));
+                }
+                sink(new Bacon.Next(new UpdateProgressEvent(1)));
             })();
             promise
                 .catch(e => {
@@ -250,6 +268,7 @@ export class ReportModel {
                  * afterwards. */
                 const newEntries = new Array<ReportEntry>();
                 let skipDownTo: ReportID|undefined;
+                let nFiltered = 0;
 
                 loop: while (true) {
                     if (abort) {
@@ -272,8 +291,12 @@ export class ReportModel {
                                 "We got %d new entries from the server.", newEntries.length);
                             break loop;
                         }
-                        // FIXME: Filter entries before sending them to the bus.
-                        sink(new Bacon.Next(new InsertEntryEvent(entry)));
+                        if (await this.filterRules.apply(entry) === FilterAction.Show) {
+                            sink(new Bacon.Next(new InsertEntryEvent(entry)));
+                        }
+                        else {
+                            nFiltered++;
+                        }
                         sink(new Bacon.Next(new UpdateProgressEvent(
                             (started - entry.timestamp.getTime()) / (started - expectedEnd))));
                         newEntries.push(entry);
@@ -312,7 +335,9 @@ export class ReportModel {
                         break loop;
                     }
                 }
-
+                if (nFiltered > 0) {
+                    console.log("Filtered out %d entries from the server.", nFiltered);
+                }
                 await this.database.tx("rw", async () => {
                     await this.database.bulkPut(newEntries);
                 });
@@ -355,31 +380,37 @@ export class ReportModel {
         }
     }
 
-    /* Check for updates immediately, without waiting for the
+    /** Check for updates immediately, without waiting for the
      * automatic update timer.
      */
     public checkForUpdates(): void {
         this.updateRequested.push(null);
     }
 
-    /* Discard all the entries in the database and reload them from
-     * the server.
+    /** Discard all the entries in the database and reload them from
+     * the server. The method can optionally skip clearing the
+     * database which is used when the set of filtering rules is
+     * updated.
      */
-    public async refresh(): Promise<void> {
+    public async refresh(clearDatabase = true): Promise<void> {
         /* Unplug the report source so that no report events will be
          * sent through the bus. */
         if (this.unplugReportSource) {
             this.unplugReportSource();
-            this.unplugReportSource = undefined;
+            delete this.unplugReportSource;
         }
 
-        // Clear the database
-        await this.database.clear();
+        if (clearDatabase) {
+            // Clear the database.
+            await this.database.clear();
+        }
 
         // Tell the report view to clear the report.
         this.reportEventBus.push(new ClearEntriesEvent());
 
-        // Reload the report from the server.
-        this.reportEventBus.plug(this.spawnReportSource());
+        // Reload the report from the server (and the database if we
+        // didn't clear it).
+        this.unplugReportSource =
+            this.reportEventBus.plug(this.spawnReportSource());
     }
 }

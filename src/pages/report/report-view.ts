@@ -82,7 +82,7 @@ export class ReportView {
     }
 
     public resetInsertionPoint(): void {
-        this.reportInsertionPoint = undefined;
+        delete this.reportInsertionPoint;
     }
 
     public insertEntry(entry: ReportEntry) {
@@ -193,7 +193,7 @@ export class ReportView {
         while (this.divReportEntries.firstChild) {
             this.divReportEntries.removeChild(this.divReportEntries.firstChild);
         }
-        this.reportInsertionPoint = undefined;
+        delete this.reportInsertionPoint;
         this.divEndOfReport.classList.add("hide");
     }
 

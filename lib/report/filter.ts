@@ -53,17 +53,17 @@ export class FilterRule implements IFilterRule {
      * null when undecidable.
      */
     public apply(entry: ReportEntry): FilterAction|null {
-        if (this.subject && this.subject.id == entry.subject.id) {
-            return this.recordFired().action;
+        if (this.subject && this.subject.id != entry.subject.id) {
+            return null;
         }
-        else if (this.activity && this.activity == entry.activity) {
-            return this.recordFired().action;
+        else if (this.activity && this.activity != entry.activity) {
+            return null;
         }
-        else if (this.object && entry.object && this.object == entry.object.type) {
-            return this.recordFired().action;
+        else if (this.object && entry.object && this.object != entry.object.type) {
+            return null;
         }
         else {
-            return null;
+            return this.recordFired().action;
         }
     }
 
@@ -113,5 +113,25 @@ export class FilterRuleSet extends Dexie {
             this.cachedRules = await this.rules.orderBy("priority").reverse().toArray();
         }
         return this.cachedRules;
+    }
+
+    /** Add a new filtering rule described as an IFilterRule, and
+     * returns a proper FilterRule object.
+     */
+    public async add(rule: IFilterRule): Promise<FilterRule> {
+        return await this.transaction("rw?", this.rules, async () => {
+            /* First we need to find out which priority to use. */
+            const arr = await this.rules.orderBy("priority").reverse().limit(1).toArray();
+            const pri = arr.length ? arr[0].priority+1 : 0;
+
+            /* Now we can construct a proper FilterRule object. */
+            const obj = new FilterRule(rule, pri);
+
+            /* Save it in the table, then clear the cache. */
+            await this.rules.add(obj);
+            delete this.cachedRules;
+
+            return obj;
+        });
     }
 }

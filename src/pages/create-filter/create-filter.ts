@@ -169,7 +169,7 @@ class CreateFilterView {
     private submit() {
         if (this.onClose) {
             this.onClose(this.toRule());
-            this.onClose = undefined;
+            delete this.onClose;
         }
         this.close();
     }

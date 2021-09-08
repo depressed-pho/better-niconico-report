@@ -20,17 +20,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     $(document).foundation();
 
     const configModel = new ConfigModel();
-    const reportModel = new ReportModel(configModel, signIn);
-    const reportView  = new ReportView();
-
     const filterRules = new FilterRuleSet();
+    const reportModel = new ReportModel(configModel, filterRules, signIn);
+    const reportView  = new ReportView();
 
     /* Setup handlers for UI events from ReportView. */
     reportView.updateRequested.onValue(() => reportModel.checkForUpdates());
     reportView.refreshRequested.onValue(() => reportModel.refresh());
     reportView.filterCreationRequested.onValue(async entry => {
-        const rule = await createFilter(entry);
-        console.log("FIXME: add rule", rule);
+        const ruleDesc = await createFilter(entry);
+        if (ruleDesc) {
+            const rule = await filterRules.add(ruleDesc);
+            console.debug("A new filtering rule has been added:", rule);
+            reportModel.refresh(false);
+        }
     });
 
     /* It is our responsible for interpreting the report events coming

@@ -76,6 +76,12 @@ export class ReportDatabase extends Dexie {
         await this.entries.orderBy("timestamp").reverse().each(f);
     }
 
+    /** A variant of each() which returns an Array instead of calling
+     * a function. Not recommended. */
+    public async toArray(): Promise<ReportEntry[]> {
+        return await this.entries.orderBy("timestamp").reverse().toArray();
+    }
+
     /** Iterate on report entries which are older than the given date,
      * and remove them from the database. The callback function can be
      * omitted.
