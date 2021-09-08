@@ -2,12 +2,14 @@ import 'foundation-sites';
 import * as $ from 'jquery';
 import '../pages.scss';
 import './report.scss';
+import { FilterRuleSet } from 'nicovideo/report/filter';
 import { ConfigModel } from './config-model';
 import { ResetInsertionPointEvent, InsertEntryEvent, DeleteEntryEvent,
          ShowEndOfReportEvent, ClearEntriesEvent, UpdateProgressEvent,
          SetUpdatingAllowed, ReportModel
        } from './report-model';
 import { ReportView } from './report-view';
+import { createFilter } from '../create-filter/create-filter';
 import { signIn } from '../sign-in/sign-in';
 
 /* This is the entry point of /assets/pages/report/report.html and is
@@ -19,13 +21,17 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const configModel = new ConfigModel();
     const reportModel = new ReportModel(configModel, signIn);
-    const reportView = new ReportView();
+    const reportView  = new ReportView();
 
-    /* Setup the "Check for updates" button on the top bar. */
+    const filterRules = new FilterRuleSet();
+
+    /* Setup handlers for UI events from ReportView. */
     reportView.updateRequested.onValue(() => reportModel.checkForUpdates());
-
-    /* Setup the control menu on the top bar. */
     reportView.refreshRequested.onValue(() => reportModel.refresh());
+    reportView.filterCreationRequested.onValue(async entry => {
+        const rule = await createFilter(entry);
+        console.log("FIXME: add rule", rule);
+    });
 
     /* It is our responsible for interpreting the report events coming
      * from the model. */

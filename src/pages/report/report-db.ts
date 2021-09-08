@@ -70,7 +70,7 @@ export class ReportDatabase extends Dexie {
     }
 
     /** Iterate on all the report entries in the database, sorted by
-     * their timestamp in the reverse order.
+     * their timestamp in descending order.
      */
     public async each(f: (entry: ReportEntry) => void): Promise<void> {
         await this.entries.orderBy("timestamp").reverse().each(f);

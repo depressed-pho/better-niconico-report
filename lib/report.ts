@@ -1,9 +1,12 @@
 import { UnauthorizedError } from 'nicovideo/errors';
 
 export type ReportID = string;
-export type Action =
+export type UserID   = string;
+export type Activity =
     "advertise" | "reserve-broadcast" | "broadcast" | "get-magic-number" |
     "like" | "list" | "upload" | "unknown";
+export type ObjectType =
+    "video" | "stream" | "image" | "comic" | "article" | "model" | "game" | "unknown"
 
 export interface ReportChunk {
     newestID: ReportID,
@@ -17,19 +20,19 @@ export interface ReportEntry {
     title: string, // Human-readable title of the entry, possibly in HTML.
     timestamp: Date,
     subject: User,
-    action: Action,
+    activity: Activity,
     object?: ReportObject
 }
 
 export interface User {
-    id: string,
+    id: UserID,
     url: string,
     name: string,
     iconURL: string
 }
 
 export interface ReportObject {
-    type: "video" | "stream" | "image" | "comic" | "article" | "model" | "game" | "unknown",
+    type: ObjectType,
     url: string,
     title: string,
     thumbURL: string
@@ -75,7 +78,7 @@ function parseEntry(json: any): ReportEntry {
         title: json.title,
         timestamp: new Date(json.updated), // Should be in W3C DTF.
         subject: parseSubject(json.muteContext, json.actor),
-        action: parseAction(json.muteContext.trigger),
+        activity: parseActivity(json.muteContext.trigger),
         object: json.object ? parseObject(json.object) : undefined
     };
 }
@@ -93,7 +96,7 @@ function parseSubject(jsonCtx: any, jsonActor: any): User {
     };
 }
 
-function parseAction(trigger: string): Action {
+function parseActivity(trigger: string): Activity {
     switch (trigger) {
         case "illustImage.nicoad_user_advertise_illust":
         case "game.nicoad_user_advertise_game":
@@ -137,7 +140,7 @@ function parseAction(trigger: string): Action {
             return "upload";
 
         default:
-            console.warn("Unknown action:", trigger);
+            console.warn("Unknown activity:", trigger);
             return "unknown";
     }
 }

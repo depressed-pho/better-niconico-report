@@ -39,6 +39,10 @@ Features include:
 The addon is not complete yet. When it's ready it'll be distributed as
 an xpi file.
 
+# Building
+
+TODO
+
 # License
 
 [CC0](https://creativecommons.org/share-your-work/public-domain/cc0/)

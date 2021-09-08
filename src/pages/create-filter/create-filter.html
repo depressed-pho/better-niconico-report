@@ -1,0 +1,64 @@
+<!-- -*- nxml -*-
+     The modal window for creating a filter from a report
+     entry. Initially invisible.
+-->
+<div class="reveal" id="bnr-create-filter"
+     data-close-on-click="false"
+     data-close-on-esc="true"
+     data-animation-in="fade-in"
+     data-animation-out="fade-out">
+  <h1>Add a new filtering rule</h1>
+  <form>
+    <div class="grid-container">
+      <div class="grid-y">
+        <div class="cell">
+          <select name="action">
+            <option value="show">Show</option>
+            <option value="hide">Hide</option>
+          </select>
+          activities of
+          <select name="subject">
+            <option value="user"></option>
+            <option value="any">*anyone*</option>
+          </select>
+          <select name="activity">
+            <option value="advertise">advertising</option>
+            <option value="reserve-broadcast">reserving a broadcast of</option>
+            <option value="broadcast">broadcasting</option>
+            <option value="get-magic-number">getting a magic number of</option>
+            <option value="like">liking</option>
+            <option value="list">listing</option>
+            <option value="upload">uploading</option>
+            <option value="any">*doing anything about*</option>
+          </select>
+          <select name="object-type">
+            <option value="video">videos</option>
+            <option value="stream">streams</option>
+            <option value="image">images</option>
+            <option value="comic">comics</option>
+            <option value="article">blog articles</option>
+            <option value="model">3D models</option>
+            <option value="game">games</option>
+            <option value="any">*anything*</option>
+          </select>
+        </div>
+        <div class="cell callout warning">
+          <div data-for="hiding-everything">
+            Are you sure you want to hide literally everything? What's
+            the point of using the addon then?
+          </div>
+          <div data-for="hiding-everything-about-user">
+            Are you sure you want to hide every activity of the user
+            <a class="bnr-user" target="_blank"><img class="bnr-user-icon" />
+            <span class="bnr-user-name"></span></a>?
+            Why not unfollowing them then?
+          </div>
+        </div>
+        <div class="cell">
+          <input type="submit" class="button float-right" value="Add" />
+          <input type="button" class="button secondary float-right" value="Cancel" />
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

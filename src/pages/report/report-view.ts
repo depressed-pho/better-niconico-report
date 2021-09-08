@@ -4,7 +4,7 @@ import * as $ from 'jquery';
 import { parseHTML } from 'nicovideo/parse-html';
 import { ReportID, ReportEntry } from 'nicovideo/report';
 
-enum Visibility {
+const enum Visibility {
     AboveViewport,
     Visible,
     BelowViewport
@@ -21,11 +21,15 @@ export class ReportView {
     /** Click events from menu items.
      */
     public readonly refreshRequested: Bacon.EventStream<null>;
+    private readonly filterCreationRequestedBus: Bacon.Bus<ReportEntry>;
+    public get filterCreationRequested(): Bacon.EventStream<ReportEntry> {
+        return this.filterCreationRequestedBus;
+    }
 
     /** The number of pixels that the content of div.bnr-report is
      * scrolled vertically or the window is resized.
      */
-    private readonly reportScrolled: Bacon.EventStream<number>;
+    public readonly reportScrolled: Bacon.EventStream<number>;
 
     /** The ID of the last visible report entry in the
      * viewport. Updated when the viewport is resized or scrolled, but
@@ -51,6 +55,8 @@ export class ReportView {
         const menuCtrl        = topBar.querySelector<HTMLElement>(".menu[data-for='control']")!;
         const miRefresh       = menuCtrl.querySelector<HTMLAnchorElement>("a[data-for='refresh']")!;
         this.refreshRequested = Bacon.fromEvent(miRefresh, "click").map(Bacon.constant(null));
+
+        this.filterCreationRequestedBus = new Bacon.Bus<ReportEntry>();
 
         this.progLoading      = ctx.querySelector<HTMLProgressElement>("progress.bnr-loading-progress")!;
         this.tmplReport       = ctx.querySelector<HTMLTemplateElement>("template[data-for='report']")!;
@@ -120,7 +126,7 @@ export class ReportView {
         const toplevel = frag.firstElementChild! as HTMLElement;
         toplevel.id         = `bnr.report.${entry.id}`;
         toplevel.dataset.id = entry.id;
-        toplevel.classList.add(`bnr-action-${entry.action}`);
+        toplevel.classList.add(`bnr-activity-${entry.activity}`);
 
         const aUser = frag.querySelector<HTMLAnchorElement>("a.bnr-user")!
         aUser.href = entry.subject.url;
@@ -130,6 +136,11 @@ export class ReportView {
 
         const spanUser = frag.querySelector<HTMLSpanElement>("span.bnr-user-name")!;
         spanUser.textContent = entry.subject.name;
+
+        const miCreateFilter = frag.querySelector<HTMLAnchorElement>("a[data-for='create-filter']")!;
+        miCreateFilter.addEventListener("click", () => {
+            this.filterCreationRequestedBus.push(entry);
+        });
 
         const divTitle = frag.querySelector<HTMLDivElement>("div.bnr-report-title")!;
         divTitle.appendChild(parseHTML(entry.title));

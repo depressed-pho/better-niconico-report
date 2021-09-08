@@ -39,11 +39,11 @@ class SignInView {
         this.btnSubmit.addEventListener("click", ev => {
             ev.preventDefault();
             this.onSubmit();
-        });
+        }, {once: true});
     }
 
-    public open(resolve: () => void): void {
-        this.onSucceeded = resolve;
+    public open(onSucceeded: () => void): void {
+        this.onSucceeded = onSucceeded;
 
         if (document.getElementById("bnr-sign-in")) {
             $(this.divReveal).foundation("open");

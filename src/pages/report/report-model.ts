@@ -248,7 +248,7 @@ export class ReportModel {
                  * otherwise we may end up in an inconsistent
                  * state. So we buffer all the entries and store them
                  * afterwards. */
-                const newEntries: ReportEntry[] = [];
+                const newEntries = new Array<ReportEntry>();
                 let skipDownTo: ReportID|undefined;
 
                 loop: while (true) {
