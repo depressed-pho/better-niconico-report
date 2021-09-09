@@ -41,7 +41,7 @@ export class ReportView {
      * event. I can't think of a good way to get rid of that. */
     public readonly lastVisibleEntryChanged: Bacon.EventStream<ReportID|null>;
 
-    private readonly btnUpdate: HTMLElement;
+    private readonly btnUpdate: HTMLButtonElement;
     private readonly progLoading: HTMLProgressElement;
     private readonly tmplReport: HTMLTemplateElement;
     private readonly divReport: HTMLDivElement;
@@ -51,7 +51,7 @@ export class ReportView {
 
     public constructor(ctx = document) {
         const topBar          = document.querySelector<HTMLDivElement>("div.top-bar")!;
-        this.btnUpdate        = document.querySelector<HTMLElement>("*[data-for='check-for-updates']")!;
+        this.btnUpdate        = document.querySelector<HTMLButtonElement>("button[data-for='check-for-updates']")!;
         this.updateRequested  = Bacon.fromEvent(this.btnUpdate, "click").map(Bacon.constant(null));
         const menuCtrl        = topBar.querySelector<HTMLElement>(".menu[data-for='control']")!;
         const miEditFilterSet = menuCtrl.querySelector<HTMLAnchorElement>("a[data-for='edit-filter-set']")!;

@@ -7,8 +7,13 @@
         height: 100%;
     }
 
-    .vertical.menu li {
-        margin-bottom: 3px;
+    .vertical.menu {
+        li {
+            margin-bottom: 3px;
+            button {
+                width: 100%;
+            }
+        }
     }
 
     table.bnr-rule-list {

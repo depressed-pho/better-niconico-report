@@ -18,8 +18,8 @@ class CreateFilterView {
     private readonly selObjectType: HTMLSelectElement;
     private readonly divWarning: HTMLDivElement;
     private readonly divWarnings: NodeListOf<HTMLDivElement>;
-    private readonly btnCancel: HTMLInputElement;
-    private readonly btnSubmit: HTMLInputElement;
+    private readonly btnCancel: HTMLButtonElement;
+    private readonly btnSubmit: HTMLButtonElement;
     private entry?: ReportEntry;
     private onClose?: (rule?: IFilterRule) => void;
 
@@ -41,8 +41,8 @@ class CreateFilterView {
         this.selObjectType = this.form.querySelector<HTMLSelectElement>("select[name='object-type']")!;
         this.divWarning    = this.form.querySelector<HTMLDivElement>("div.warning")!;
         this.divWarnings   = this.divWarning.querySelectorAll<HTMLParagraphElement>(":scope > div");
-        this.btnCancel     = this.form.querySelector<HTMLInputElement>("input.secondary")!;
-        this.btnSubmit     = this.form.querySelector<HTMLInputElement>("input[type='submit']")!;
+        this.btnCancel     = this.form.querySelector<HTMLButtonElement>("button.secondary")!;
+        this.btnSubmit     = this.form.querySelector<HTMLButtonElement>("button[type='submit']")!;
 
         this.selAction    .addEventListener("change", () => this.warnIfNeeded());
         this.selSubject   .addEventListener("change", () => this.warnIfNeeded());

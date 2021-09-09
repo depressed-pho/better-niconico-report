@@ -31,7 +31,7 @@
         <template data-for="row">
           <!-- If this is a selected row, the <tr> element should have
                .bnr-selected -->
-          <tr>
+          <tr data-id="">
             <td class="bnr-rule">
               <span data-for="action">
                 <template data-for="show">Show</template>
@@ -81,22 +81,22 @@
       <div class="cell shrink">
         <ul class="vertical menu">
           <li>
-            <a class="button">
+            <button type="button" class="button" data-for="raise-priority">
               <i class="fi fi-arrow-up"></i>
               <span>Raise the priority</span>
-            </a>
+            </button>
           </li>
           <li>
-            <a class="button">
+            <button type="button" class="button" data-for="lower-priority">
               <i class="fi fi-arrow-down"></i>
               <span>Lower the priority</span>
-            </a>
+            </button>
           </li>
           <li>
-            <a class="button warning">
+            <button type="button" class="button warning" data-for="delete">
               <i class="fi fi-trash"></i>
               <span>Delete the rule</span>
-            </a>
+            </button>
           </li>
         </ul>
       </div>

@@ -106,6 +106,16 @@ export class FilterRuleSet extends Dexie {
         });
     }
 
+    /** Return the number of rules. */
+    public async count(): Promise<number> {
+        if (this.cachedRules) {
+            return this.cachedRules.length;
+        }
+        else {
+            return await this.rules.count();
+        }
+    }
+
     /** Return an Array of all the existing rules, sorted by their
      * priority in descending order. */
     public async toArray(): Promise<FilterRule[]> {

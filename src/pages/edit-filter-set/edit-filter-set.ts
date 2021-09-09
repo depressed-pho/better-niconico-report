@@ -1,18 +1,28 @@
+import * as Bacon from 'baconjs';
 import { Reveal } from 'foundation-sites';
 import * as $ from 'jquery';
 import './edit-filter-set.scss';
 import 'assets/table/scrollable.scss';
 import 'assets/table/selectable.scss';
 import { parseHTML } from 'nicovideo/parse-html';
-import { FilterAction, FilterRuleSet } from 'nicovideo/report/filter';
+import { FilterRuleID, FilterAction, FilterRuleSet } from 'nicovideo/report/filter';
 import htmlEditFilterSet from './edit-filter-set.html';
 
 class EditFilterSetView {
     private static _instance: EditFilterSetView;
+
     private readonly frag: DocumentFragment;
     private readonly divReveal: HTMLDivElement;
     private readonly tbody: HTMLTableSectionElement;
     private readonly tmplRow: HTMLTemplateElement;
+    private readonly btnRaisePri: HTMLButtonElement;
+    private readonly btnLowerPri: HTMLButtonElement;
+    private readonly btnDelete: HTMLButtonElement;
+
+    private readonly selectedRuleBus: Bacon.Bus<FilterRuleID|null>;
+    private readonly selectedRule: Bacon.Property<FilterRuleID|null>;
+
+    private filterRules?: FilterRuleSet;
     private onClose?: (isUpdated: boolean) => void;
     private isUpdated: boolean;
 
@@ -24,11 +34,38 @@ class EditFilterSetView {
     }
 
     private constructor() {
-        this.frag      = parseHTML(htmlEditFilterSet);
-        this.divReveal = this.frag.querySelector<HTMLDivElement>("div.reveal")!;
-        this.tbody     = this.frag.querySelector<HTMLTableSectionElement>("table > tbody")!;
-        this.tmplRow   = this.frag.querySelector<HTMLTemplateElement>("template[data-for='row']")!;
-        this.isUpdated = false;
+        this.frag        = parseHTML(htmlEditFilterSet);
+        this.divReveal   = this.frag.querySelector<HTMLDivElement>("div.reveal")!;
+        this.tbody       = this.frag.querySelector<HTMLTableSectionElement>("table > tbody")!;
+        this.tmplRow     = this.frag.querySelector<HTMLTemplateElement>("template[data-for='row']")!;
+        this.btnRaisePri = this.frag.querySelector<HTMLButtonElement>("button[data-for='raise-priority']")!;
+        this.btnLowerPri = this.frag.querySelector<HTMLButtonElement>("button[data-for='lower-priority']")!;
+        this.btnDelete   = this.frag.querySelector<HTMLButtonElement>("button[data-for='delete']")!;
+        this.isUpdated   = false;
+
+        this.selectedRuleBus = new Bacon.Bus<FilterRuleID|null>();
+        this.selectedRule    = this.selectedRuleBus.toProperty(null);
+        this.selectedRule.onValue(sel => this.highlight(sel));
+
+        /* The "Raise the priority" button is enabled when a rule is
+         * selected and it's not the most prioritized rule. */
+        this.selectedRule.onValue(async sel => {
+            this.btnRaisePri.disabled =
+                !sel || await this.indexOf(sel) == 0;
+        });
+
+        /* The "Lower the priority" button is enabled when a rule is
+         * selected and it's not the least prioritized rule. */
+        this.selectedRule.onValue(async sel => {
+            this.btnLowerPri.disabled =
+                !sel || await this.indexOf(sel) == await this.filterRules!.count() - 1;
+        });
+
+        /* The "Delete the rule" button is enabled when a rule is
+         * selected. There is no confirmation at the moment. */
+        this.selectedRule.onValue(sel => {
+            this.btnDelete.disabled = sel == null;
+        });
 
         // Foundation uses jQuery events as opposed to the native DOM
         // events.
@@ -41,26 +78,50 @@ class EditFilterSetView {
         });
     }
 
-    public async open(filterRules: FilterRuleSet, onClose: (isUpdated: boolean) => void): Promise<void> {
-        this.onClose   = onClose;
-        this.isUpdated = false;
+    private async indexOf(ruleID: FilterRuleID): Promise<number> {
+        const rules = await this.filterRules!.toArray();
+        const index = rules.findIndex(rule => rule.id == ruleID);
+        if (index >= 0) {
+            return index;
+        }
+        else {
+            throw new Error(`Rule not found: ${ruleID}`);
+        }
+    }
 
+    public async open(filterRules: FilterRuleSet, onClose: (isUpdated: boolean) => void): Promise<void> {
+        this.filterRules = filterRules;
+        this.onClose     = onClose;
+        this.isUpdated   = false;
+
+        await this.refreshRules();
+        this.selectedRuleBus.push(null);
+
+        if (document.getElementById("bnr-edit-filter-set")) {
+            $(this.divReveal).foundation("open");
+        }
+        else {
+            const body = document.querySelector<HTMLBodyElement>("body")!;
+            body.appendChild(this.frag);
+
+            new Reveal($(this.divReveal)).open();
+        }
+    }
+
+    private async refreshRules(): Promise<void> {
         while (this.tbody.firstChild) {
             this.tbody.removeChild(this.tbody.firstChild);
         }
-        for (const rule of await filterRules.toArray()) {
+        for (const rule of await this.filterRules!.toArray()) {
             /* For whatever reason, Node#cloneNode() returns Node, not
              * polymorphic this. Isn't this a bug? */
             const row = this.tmplRow.content.cloneNode(true) as DocumentFragment;
 
-            // Is it selected?
             const tr = row.querySelector<HTMLTableRowElement>("tr")!;
-            if (false) { // FIXME
-                tr.classList.add("bnr-selected");
-            }
+            tr.dataset.id = rule.id; // highlight() uses this.
             tr.addEventListener("click", () => {
                 // Select it when clicked.
-                // FIXME
+                this.selectedRuleBus.push(rule.id);
             });
 
             // Rule
@@ -127,15 +188,16 @@ class EditFilterSetView {
 
             this.tbody.appendChild(row);
         }
+    }
 
-        if (document.getElementById("bnr-edit-filter-set")) {
-            $(this.divReveal).foundation("open");
-        }
-        else {
-            const body = document.querySelector<HTMLBodyElement>("body")!;
-            body.appendChild(this.frag);
-
-            new Reveal($(this.divReveal)).open();
+    private highlight(ruleID: FilterRuleID|null) {
+        for (const tr of this.tbody.querySelectorAll("tr")) {
+            if (tr.dataset.id && ruleID && tr.dataset.id == ruleID) {
+                tr.classList.add("bnr-selected");
+            }
+            else {
+                tr.classList.remove("bnr-selected");
+            }
         }
     }
 }
