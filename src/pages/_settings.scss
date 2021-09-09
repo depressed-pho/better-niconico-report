@@ -23,6 +23,16 @@ h1 {
     }
 }
 
+@mixin bnr-default-anchor($text-decoration: underline) {
+    a {
+        color: black;
+        text-decoration: $text-decoration;
+    }
+    a:visited {
+        color: gray;
+    }
+}
+
 /* Motion UI */
 $motion-ui-speeds: (
     default: 250ms,

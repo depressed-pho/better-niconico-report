@@ -1,4 +1,4 @@
-@import "~foundation-sites/scss/foundation.scss";
+@import '../pages.scss';
 
 #bnr-edit-filter-set {
     height: 90vh;
@@ -13,13 +13,7 @@
 
     table.bnr-rule-list {
         /* Anchors */
-        a {
-            color: black;
-            text-decoration: underline;
-        }
-        a:visited {
-            color: gray;
-        }
+        @include bnr-default-anchor;
 
         /* Columns */
         .bnr-num-fired {

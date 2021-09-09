@@ -1,3 +1,5 @@
+@import '../pages.scss';
+
 #bnr-create-filter {
     select {
         /* Cancel the Foundation default "width: 100%". */
@@ -16,13 +18,7 @@
     }
    */
 
-    a {
-        color: black;
-        text-decoration: underline;
-    }
-    a:visited {
-        color: gray;
-    }
+    @include bnr-default-anchor;
 
     .menu.align-right {
         li {

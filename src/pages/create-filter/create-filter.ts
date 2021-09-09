@@ -1,6 +1,5 @@
 import { Reveal } from 'foundation-sites';
 import * as $ from 'jquery';
-import '../pages.scss';
 import './create-filter.scss';
 import { parseHTML } from 'nicovideo/parse-html';
 import { Activity, ObjectType, ReportEntry } from 'nicovideo/report';

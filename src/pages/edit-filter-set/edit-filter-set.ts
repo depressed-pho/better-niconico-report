@@ -1,6 +1,5 @@
 import { Reveal } from 'foundation-sites';
 import * as $ from 'jquery';
-import '../pages.scss';
 import './edit-filter-set.scss';
 import 'assets/table/scrollable.scss';
 import 'assets/table/selectable.scss';

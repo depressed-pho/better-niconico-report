@@ -1,3 +1,5 @@
+@import '../pages.scss';
+
 $user-icon-width: 40px;
 $user-icon-height: 40px;
 
@@ -35,45 +37,40 @@ $object-thumb-height: 63px;
 .bnr-report {
     padding-top: 1rem;
     overflow-y: auto;
-
-    a {
-        color: black;
-        text-decoration: none;
-    }
-    a:visited {
-        color: gray;
-    }
+    @include bnr-default-anchor($text-decoration: none);
 }
 
 /* TODO: These should be customizable, i.e. these styles should be
    dynamically generated and applied. */
-.bnr-activity-advertise {
-    background-color: hsl(158,100,95);
-}
-.bnr-activity-reserve-broadcast {
-    background-color: hsl(25,100,96);
-    .bnr-report-title {
-        color: hsl(25, 60, 51);
+.card {
+    &.bnr-activity-advertise {
+        background-color: hsl(158,100,95);
     }
-}
-.bnr-activity-broadcast {
-    background-color: hsl(25,100,91);
-    .bnr-report-title {
-        color: hsl(25, 60, 46);
-        font-weight: bold;
+    &.bnr-activity-reserve-broadcast {
+        background-color: hsl(25,100,96);
+        .bnr-report-title {
+            color: hsl(25, 60, 51);
+        }
     }
-}
-.bnr-activity-like {
-    background-color: hsl(102,100,95);
-}
-.bnr-activity-list {
-    background-color: hsl(64,100,95);
-}
-.bnr-activity-upload {
-    background-color: hsl(0, 100, 91);
-    .bnr-report-title {
-        color: hsl(0, 60, 46);
-        font-weight: bold;
+    &.bnr-activity-broadcast {
+        background-color: hsl(25,100,91);
+        .bnr-report-title {
+            color: hsl(25, 60, 46);
+            font-weight: bold;
+        }
+    }
+    &.bnr-activity-like {
+        background-color: hsl(102,100,95);
+    }
+    &.bnr-activity-list {
+        background-color: hsl(64,100,95);
+    }
+    &.bnr-activity-upload {
+        background-color: hsl(0, 100, 91);
+        .bnr-report-title {
+            color: hsl(0, 60, 46);
+            font-weight: bold;
+        }
     }
 }
 

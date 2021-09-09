@@ -1,6 +1,5 @@
 import { Reveal } from 'foundation-sites';
 import * as $ from 'jquery';
-import '../pages.scss';
 import './sign-in.scss';
 import { parseHTML } from 'nicovideo/parse-html';
 import * as Auth from 'nicovideo/auth';

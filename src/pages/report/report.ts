@@ -1,6 +1,5 @@
 import 'foundation-sites';
 import * as $ from 'jquery';
-import '../pages.scss';
 import './report.scss';
 import { FilterRuleSet } from 'nicovideo/report/filter';
 import { ConfigModel } from './config-model';
