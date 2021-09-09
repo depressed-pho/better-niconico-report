@@ -20,11 +20,62 @@
     <div class="cell auto grid-x grid-margin-x">
       <!-- The left side is a list of rules. -->
       <div class="cell auto">
-        <table class="unstriped bnr-scrollable">
-          <th class="bnr-rule">Rule</th>
-          <th class="bnr-num-fired">#Fired</th>
-          <th class="bnr-last-fired">Last fired</th>
+        <table class="unstriped bnr-rule-list bnr-scrollable bnr-selectable">
+          <thead>
+            <th class="bnr-rule">Rule</th>
+            <th class="bnr-num-fired">#Fired</th>
+            <th class="bnr-last-fired">Last fired</th>
+          </thead>
+          <tbody />
         </table>
+        <template data-for="row">
+          <!-- If this is a selected row, the <tr> element should have
+               .bnr-selected -->
+          <tr>
+            <td class="bnr-rule">
+              <span data-for="action">
+                <template data-for="show">Show</template>
+                <template data-for="hide">Hide</template>
+              </span>
+              activities of
+              <span data-for="subject">
+                <template data-for="user">
+                  <a class="bnr-user" target="_blank"><img class="bnr-user-icon" />
+                  <span class="bnr-user-name"></span></a>
+                </template>
+                <template data-for="any">
+                  <span class="bnr-any">anyone</span>
+                </template>
+              </span>
+              <span data-for="activity">
+                <template data-for="advertise">advertising</template>
+                <template data-for="reserve-broadcast">reserving a broadcast of</template>
+                <template data-for="broadcast">broadcasting</template>
+                <template data-for="get-magic-number">getting a magic number of</template>
+                <template data-for="like">liking</template>
+                <template data-for="list">listing</template>
+                <template data-for="upload">uploading</template>
+                <template data-for="any">
+                  <span class="bnr-any">doing anything about</span>
+                </template>
+              </span>
+              <span data-for="object-type">
+                <template data-for="video">videos</template>
+                <template data-for="stream">streams</template>
+                <template data-for="image">images</template>
+                <template data-for="comic">comics</template>
+                <template data-for="article">blog articles</template>
+                <template data-for="model">3D models</template>
+                <template data-for="game">games</template>
+                <template data-for="any">
+                  <span class="bnr-any">anything</span>
+                </template>
+              </span>
+            </td>
+            <td class="bnr-num-fired"></td>
+            <td class="bnr-last-fired"></td>
+          </tr>
+        </template>
       </div>
       <!-- The right side is a set of controls. -->
       <div class="cell shrink">

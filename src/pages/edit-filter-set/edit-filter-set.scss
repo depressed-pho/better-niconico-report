@@ -1,3 +1,5 @@
+@import "~foundation-sites/scss/foundation.scss";
+
 #bnr-edit-filter-set {
     height: 90%;
 
@@ -9,13 +11,45 @@
         margin-bottom: 3px;
     }
 
-    table {
+    table.bnr-rule-list {
+        /* Anchors */
+        a {
+            color: black;
+            text-decoration: underline;
+        }
+        a:visited {
+            color: gray;
+        }
+
         /* Columns */
         .bnr-num-fired {
             width: 5em;
         }
         .bnr-last-fired {
-            width: 7em;
+            width: 13em;
         }
+
+        /* Hover */
+        tbody tr {
+            &:hover {
+                background-color: $table-row-hover;
+            }
+        }
+
+        /* Selected row */
+        $selected-color: scale-color(get-color(primary), $lightness: 70%);
+        $selected-hover: darken($selected-color, $table-hover-scale);
+        .bnr-selected {
+            background-color: $selected-color;
+
+            &:hover {
+                background-color: $selected-hover;
+            }
+        }
+    }
+
+    .bnr-any {
+        color: hsl(0, 60, 46);
+        font-weight: bold;
     }
 }

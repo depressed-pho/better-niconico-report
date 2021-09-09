@@ -37,8 +37,12 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    reportView.editFilterSetRequested.onValue(() => {
-        const events = editFilterSet();
+    reportView.editFilterSetRequested.onValue(async () => {
+        const isUpdated = await editFilterSet(filterRules);
+        if (isUpdated) {
+            console.debug("The set of filtering rules has been updated. Reloading the report...");
+            reportModel.refresh(false);
+        }
     });
 
     /* It is our responsible for interpreting the report events coming
