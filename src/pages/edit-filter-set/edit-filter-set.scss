@@ -1,9 +1,9 @@
 @import "~foundation-sites/scss/foundation.scss";
 
 #bnr-edit-filter-set {
-    height: 90%;
+    height: 90vh;
 
-    & > .grid-y {
+    & > .grid-y, .bnr-table-container {
         height: 100%;
     }
 
