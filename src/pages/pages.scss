@@ -16,13 +16,13 @@
 // Generic components
 @include foundation-button;
 //@include foundation-button-group;
-//@include foundation-close-button;
+@include foundation-close-button;
 //@include foundation-label;
 //@include foundation-progress-bar;
 @include foundation-progress-element;
 //@include foundation-slider;
 //@include foundation-switch;
-//@include foundation-table;
+@include foundation-table;
 
 // Basic components
 //@include foundation-badge;

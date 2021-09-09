@@ -1,0 +1,54 @@
+<!-- -*- nxml -*-
+     The modal window for editing the set of filtering
+     rules. Initially invisible.
+-->
+<div class="large reveal" id="bnr-edit-filter-set"
+     data-close-on-click="false"
+     data-close-on-esc="true"
+     data-animation-in="fade-in"
+     data-animation-out="fade-out">
+  <button class="close-button" data-close="" aria-label="Close modal" type="button">
+    <span aria-hidden="true" title="Close the window when you are done">&times;</span>
+  </button>
+
+  <!-- Split the window vertically, for the header and the body. -->
+  <div class="grid-y">
+    <div class="cell shrink">
+      <h1>Edit the set of filtering rules</h1>
+    </div>
+    <!-- Split the space horizontally into two parts. -->
+    <div class="cell auto grid-x grid-margin-x">
+      <!-- The left side is a list of rules. -->
+      <div class="cell auto">
+        <table class="unstriped bnr-scrollable">
+          <th class="bnr-rule">Rule</th>
+          <th class="bnr-num-fired">#Fired</th>
+          <th class="bnr-last-fired">Last fired</th>
+        </table>
+      </div>
+      <!-- The right side is a set of controls. -->
+      <div class="cell shrink">
+        <ul class="vertical menu">
+          <li>
+            <a class="button">
+              <i class="fi fi-arrow-up"></i>
+              <span>Raise the priority</span>
+            </a>
+          </li>
+          <li>
+            <a class="button">
+              <i class="fi fi-arrow-down"></i>
+              <span>Lower the priority</span>
+            </a>
+          </li>
+          <li>
+            <a class="button warning">
+              <i class="fi fi-trash"></i>
+              <span>Delete the rule</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

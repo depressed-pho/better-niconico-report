@@ -21,6 +21,7 @@ export class ReportView {
     /** Click events from menu items.
      */
     public readonly refreshRequested: Bacon.EventStream<null>;
+    public readonly editFilterSetRequested: Bacon.EventStream<null>;
     private readonly filterCreationRequestedBus: Bacon.Bus<ReportEntry>;
     public get filterCreationRequested(): Bacon.EventStream<ReportEntry> {
         return this.filterCreationRequestedBus;
@@ -53,6 +54,8 @@ export class ReportView {
         this.btnUpdate        = document.querySelector<HTMLElement>("*[data-for='check-for-updates']")!;
         this.updateRequested  = Bacon.fromEvent(this.btnUpdate, "click").map(Bacon.constant(null));
         const menuCtrl        = topBar.querySelector<HTMLElement>(".menu[data-for='control']")!;
+        const miEditFilterSet = menuCtrl.querySelector<HTMLAnchorElement>("a[data-for='edit-filter-set']")!;
+        this.editFilterSetRequested = Bacon.fromEvent(miEditFilterSet, "click").map(Bacon.constant(null));
         const miRefresh       = menuCtrl.querySelector<HTMLAnchorElement>("a[data-for='refresh']")!;
         this.refreshRequested = Bacon.fromEvent(miRefresh, "click").map(Bacon.constant(null));
 

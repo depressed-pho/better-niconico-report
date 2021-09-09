@@ -1,0 +1,21 @@
+#bnr-edit-filter-set {
+    height: 90%;
+
+    & > .grid-y {
+        height: 100%;
+    }
+
+    .vertical.menu li {
+        margin-bottom: 3px;
+    }
+
+    table {
+        /* Columns */
+        .bnr-num-fired {
+            width: 5em;
+        }
+        .bnr-last-fired {
+            width: 7em;
+        }
+    }
+}

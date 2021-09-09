@@ -54,7 +54,8 @@ module.exports = (env, argv) => {
         resolve: {
             extensions: [".ts", ".js"],
             alias: {
-                'nicovideo': path.resolve(__dirname, 'lib')
+                'nicovideo': path.resolve(__dirname, 'lib'),
+                'assets': path.resolve(__dirname, 'assets')
             }
         },
         plugins: [

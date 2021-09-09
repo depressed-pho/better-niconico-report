@@ -5,7 +5,7 @@ import { FilterAction, FilterRuleSet } from 'nicovideo/report/filter';
 import { ConfigModel } from './config-model';
 import { ReportDatabase } from './report-db';
 
-const DEBUG_FETCH_ONLY_THE_FIRST_CHUNK = false;
+const DEBUG_FETCH_ONLY_THE_FIRST_CHUNK = true;
 
 export class ReportEvent {}
 

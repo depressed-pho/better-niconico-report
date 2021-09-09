@@ -10,6 +10,7 @@ import { ResetInsertionPointEvent, InsertEntryEvent, DeleteEntryEvent,
        } from './report-model';
 import { ReportView } from './report-view';
 import { createFilter } from '../create-filter/create-filter';
+import { editFilterSet } from '../edit-filter-set/edit-filter-set';
 import { signIn } from '../sign-in/sign-in';
 
 /* This is the entry point of /assets/pages/report/report.html and is
@@ -34,6 +35,10 @@ window.addEventListener('DOMContentLoaded', async () => {
             console.debug("A new filtering rule has been added:", rule);
             reportModel.refresh(false);
         }
+    });
+
+    reportView.editFilterSetRequested.onValue(() => {
+        const events = editFilterSet();
     });
 
     /* It is our responsible for interpreting the report events coming

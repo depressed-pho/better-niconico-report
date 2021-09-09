@@ -23,4 +23,14 @@
     a:visited {
         color: gray;
     }
+
+    .menu.align-right {
+        li {
+            margin-left: 3px;
+        }
+
+        /* A workaround for a possible bug in foundation-sites@6.7.1:
+           .menu.align-right has no effect without this: */
+        justify-content: flex-end;
+    }
 }
