@@ -7,7 +7,7 @@ export interface Credentials {
     password: string
 }
 
-export async function signIn(creds: Credentials): Promise<void> {
+export async function signIn(creds: Credentials) {
     const URL = "https://account.nicovideo.jp/api/v1/login?site=niconico&mail_or_tel=1";
     const res = await fetch(URL, {
         method: "POST",
@@ -28,4 +28,14 @@ export async function signIn(creds: Credentials): Promise<void> {
     if (/\/login\?/.test(res.url)) {
         throw new UnauthorizedError("Authentication failed");
     }
+}
+
+export async function signOut() {
+    // https://account.nicovideo.jp/logout?site=niconico&next_url=%2F&sec=header_pc&cmnhd_ref=device%3Dpc%26site%3Dniconico%26pos%3Duserpanel%26page%3Dmy_top
+    const URL = "https://account.nicovideo.jp/logout?site=niconico";
+    await fetch(URL, {
+        method: "GET",
+        mode: "cors",
+        redirect: "follow"
+    });
 }

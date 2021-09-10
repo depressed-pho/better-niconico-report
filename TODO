@@ -1,9 +1,10 @@
 # -*- org -*-
 
 * TODO [#A] Configuration panel
-* TODO [#A] Filtering
 * TODO [#B] Hover on a thumbnail to show a bigger image
 * TODO [#A] Automatic update should be able to be disabled
+* TODO [#C] Would be nice if the rule set editor supported drag and drop to reorder rules
+* DONE [#A] Filtering
 * DONE [#A] Reload button on the top bar
 * DONE [#A] Purge old entries both from the database and the page
 * DONE [#A] End of the report marker

@@ -9,9 +9,6 @@ import { FilterRuleID, FilterAction, FilterRule, FilterRuleSet
        } from 'nicovideo/report/filter';
 import htmlEditFilterSet from './edit-filter-set.html';
 
-/* TODO: Would be nice if the table supported drag and drop to reorder
- * rules. */
-
 class EditFilterSetView {
     private static _instance: EditFilterSetView;
 

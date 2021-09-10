@@ -2,7 +2,7 @@ import * as Bacon from 'baconjs';
 import { UnauthorizedError } from 'nicovideo/errors';
 import { ReportID, ReportChunk, ReportEntry, getReportChunk } from 'nicovideo/report';
 import { FilterAction, FilterRuleSet } from 'nicovideo/report/filter';
-import { ConfigModel } from './config-model';
+import { ConfigModel } from '../config/config-model';
 import { ReportDatabase } from './report-db';
 
 const DEBUG_FETCH_ONLY_THE_FIRST_CHUNK = true;

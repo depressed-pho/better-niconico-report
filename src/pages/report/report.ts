@@ -1,8 +1,9 @@
 import 'foundation-sites';
 import * as $ from 'jquery';
 import './report.scss';
+import { signOut } from 'nicovideo/auth';
 import { FilterRuleSet } from 'nicovideo/report/filter';
-import { ConfigModel } from './config-model';
+import { ConfigModel } from '../config/config-model';
 import { ResetInsertionPointEvent, InsertEntryEvent, DeleteEntryEvent,
          ShowEndOfReportEvent, ClearEntriesEvent, UpdateProgressEvent,
          SetUpdatingAllowed, ReportModel
@@ -26,13 +27,18 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     /* Setup handlers for UI events from ReportView. */
     reportView.updateRequested.onValue(() => reportModel.checkForUpdates());
-    reportView.refreshRequested.onValue(() => reportModel.refresh());
+    reportView.editPrefsRequested.onValue(() => console.log("FIXME: edit prefs"));
+    reportView.refreshRequested.onValue(async () => await reportModel.refresh());
+    reportView.signOutRequested.onValue(async () => {
+        await signOut();
+        await reportModel.refresh();
+    });
     reportView.filterCreationRequested.onValue(async entry => {
         const ruleDesc = await createFilter(entry);
         if (ruleDesc) {
             const rule = await filterRules.add(ruleDesc);
             console.debug("A new filtering rule has been added:", rule);
-            reportModel.refresh(false);
+            await reportModel.refresh(false);
         }
     });
 
@@ -40,7 +46,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         const isUpdated = await editFilterSet(filterRules);
         if (isUpdated) {
             console.debug("The set of filtering rules has been updated. Reloading the report...");
-            reportModel.refresh(false);
+            await reportModel.refresh(false);
         }
     });
 
