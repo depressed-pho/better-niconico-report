@@ -305,9 +305,9 @@ class EditFilterSetView {
     }
 }
 
-/** Open up a modal dialog letting the user to edit the set of
- * filtering rules, and return a Promise which fulfills with true if
- * the set of rules is modified, or false otherwise. */
+/** Open up a modal dialog letting the user edit the set of filtering
+ * rules, and return a Promise which fulfills with true if the set of
+ * rules is modified, or false otherwise. */
 export function editFilterSet(filterRules: FilterRuleSet): Promise<boolean> {
     return new Promise((resolve) => {
         EditFilterSetView.singleton.open(filterRules, resolve);
