@@ -43,32 +43,40 @@ $object-thumb-height: 63px;
 /* TODO: These should be customizable, i.e. these styles should be
    dynamically generated and applied. */
 .card {
+    @function bnr-activity-bg-color($hue, $saturation: 20, $lightness: 95) {
+        @return hsl($hue, $saturation, $lightness);
+    }
+
+    @function bnr-activity-fg-color($hue, $saturation: 60, $lightness: 50) {
+        @return hsl($hue, $saturation, $lightness);
+    }
+
     &.bnr-activity-advertise {
-        background-color: hsl(158,100,95);
+        background-color: bnr-activity-bg-color(158);
     }
     &.bnr-activity-reserve-broadcast {
-        background-color: hsl(25,100,96);
+        background-color: bnr-activity-bg-color(25);
         .bnr-report-title {
-            color: hsl(25, 60, 51);
+            color: bnr-activity-fg-color(25);
         }
     }
     &.bnr-activity-broadcast {
-        background-color: hsl(25,100,91);
+        background-color: bnr-activity-bg-color(25, $lightness: 91);
         .bnr-report-title {
-            color: hsl(25, 60, 46);
+            color: bnr-activity-fg-color(25, $lightness: 46);
             font-weight: bold;
         }
     }
     &.bnr-activity-like {
-        background-color: hsl(102,100,95);
+        background-color: bnr-activity-bg-color(102);
     }
     &.bnr-activity-list {
-        background-color: hsl(64,100,95);
+        background-color: bnr-activity-bg-color(64);
     }
     &.bnr-activity-upload {
-        background-color: hsl(0, 100, 91);
+        background-color: bnr-activity-bg-color(0, $saturation: 80);
         .bnr-report-title {
-            color: hsl(0, 60, 46);
+            color: bnr-activity-fg-color(0, $lightness: 46);
             font-weight: bold;
         }
     }
