@@ -19,6 +19,18 @@ const firefoxBin = (() => {
     }
 })();
 
+/* The default watching stops working very often on NetBSD. Until I
+ * find out the cause, fall back to polling. */
+const poll = (() => {
+    const os = require("os");
+    if (/netbsd/i.test(os.platform())) {
+        return 500;
+    }
+    else {
+        return false;
+    }
+})();
+
 module.exports = (env, argv) => {
     const prod = {
         mode: "production",
@@ -35,7 +47,8 @@ module.exports = (env, argv) => {
         devtool: "cheap-module-source-map",
         watchOptions: {
             // Ignore Emacs auto-save files.
-            ignored: ['**/.#*', '**/#*']
+            ignored: ['**/.#*', '**/#*'],
+            poll
         }
     };
     const common = {

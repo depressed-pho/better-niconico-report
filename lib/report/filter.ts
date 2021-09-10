@@ -116,8 +116,27 @@ export class FilterRuleSet extends Dexie {
         }
     }
 
+    /** Find a rule by its ID, or raise an error if not found.
+     */
+    public async get(id: FilterRuleID): Promise<FilterRule> {
+        if (this.cachedRules) {
+            const rule = this.cachedRules.find(rule => rule.id === id);
+            if (rule) {
+                return rule;
+            }
+        }
+        else {
+            const rule = await this.rules.get(id);
+            if (rule) {
+                return rule;
+            }
+        }
+        throw new Error(`Rule not found: ${id}`);
+    }
+
     /** Return an Array of all the existing rules, sorted by their
-     * priority in descending order. */
+     * priority in descending order.
+     */
     public async toArray(): Promise<FilterRule[]> {
         if (!this.cachedRules) {
             this.cachedRules = await this.rules.orderBy("priority").reverse().toArray();
@@ -142,6 +161,33 @@ export class FilterRuleSet extends Dexie {
             delete this.cachedRules;
 
             return obj;
+        });
+    }
+
+    /** Remove a rule with the given ID. Raise no errors even if no
+     * such rules exist.
+     */
+    public async remove(id: FilterRuleID) {
+        await this.rules.delete(id);
+        delete this.cachedRules;
+    }
+
+    /** Swap priorities of two rules.
+     */
+    public async swap(idA: FilterRuleID, idB: FilterRuleID) {
+        await this.transaction("rw?", this.rules, async () => {
+            /* We cannot just update the rule objects because that
+             * would temporarily violate the uniqueness constraint. So
+             * we first remove one of the rules from the table. */
+            const ruleA = await this.get(idA);
+            const ruleB = await this.get(idB);
+            const tmp   = ruleA.priority;
+            ruleA.priority = ruleB.priority;
+            ruleB.priority = tmp;
+            await this.rules.delete(idA);
+            await this.rules.put(ruleB);
+            await this.rules.add(ruleA);
+            delete this.cachedRules;
         });
     }
 }

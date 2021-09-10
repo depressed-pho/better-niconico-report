@@ -193,9 +193,7 @@ export class ReportView {
     }
 
     public clearEntries() {
-        while (this.divReportEntries.firstChild) {
-            this.divReportEntries.removeChild(this.divReportEntries.firstChild);
-        }
+        this.divReportEntries.replaceChildren();
         delete this.reportInsertionPoint;
         this.divEndOfReport.classList.add("hide");
     }

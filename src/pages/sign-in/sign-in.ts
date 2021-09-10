@@ -39,6 +39,12 @@ class SignInView {
             ev.preventDefault();
             this.onSubmit();
         }, {once: true});
+
+        // Foundation uses jQuery events as opposed to the native DOM
+        // events.
+        $(this.divReveal).on("open.zf.reveal", () => {
+            this.inUser.focus();
+        });
     }
 
     public open(onSucceeded: () => void): void {

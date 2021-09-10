@@ -5,8 +5,12 @@ import './edit-filter-set.scss';
 import 'assets/table/scrollable.scss';
 import 'assets/table/selectable.scss';
 import { parseHTML } from 'nicovideo/parse-html';
-import { FilterRuleID, FilterAction, FilterRuleSet } from 'nicovideo/report/filter';
+import { FilterRuleID, FilterAction, FilterRule, FilterRuleSet
+       } from 'nicovideo/report/filter';
 import htmlEditFilterSet from './edit-filter-set.html';
+
+/* TODO: Would be nice if the table supported drag and drop to reorder
+ * rules. */
 
 class EditFilterSetView {
     private static _instance: EditFilterSetView;
@@ -15,16 +19,18 @@ class EditFilterSetView {
     private readonly divReveal: HTMLDivElement;
     private readonly tbody: HTMLTableSectionElement;
     private readonly tmplRow: HTMLTemplateElement;
-    private readonly btnRaisePri: HTMLButtonElement;
-    private readonly btnLowerPri: HTMLButtonElement;
+    private readonly btnRaise: HTMLButtonElement;
+    private readonly btnLower: HTMLButtonElement;
     private readonly btnDelete: HTMLButtonElement;
 
     private readonly selectedRuleBus: Bacon.Bus<FilterRuleID|null>;
     private readonly selectedRule: Bacon.Property<FilterRuleID|null>;
 
+    private readonly ruleSetModifiedBus: Bacon.Bus<null>;
+
     private filterRules?: FilterRuleSet;
-    private onClose?: (isUpdated: boolean) => void;
-    private isUpdated: boolean;
+    private onClose?: (isModified: boolean) => void;
+    private isModified: boolean;
 
     public static get singleton(): EditFilterSetView {
         if (!this._instance) {
@@ -34,31 +40,54 @@ class EditFilterSetView {
     }
 
     private constructor() {
-        this.frag        = parseHTML(htmlEditFilterSet);
-        this.divReveal   = this.frag.querySelector<HTMLDivElement>("div.reveal")!;
-        this.tbody       = this.frag.querySelector<HTMLTableSectionElement>("table > tbody")!;
-        this.tmplRow     = this.frag.querySelector<HTMLTemplateElement>("template[data-for='row']")!;
-        this.btnRaisePri = this.frag.querySelector<HTMLButtonElement>("button[data-for='raise-priority']")!;
-        this.btnLowerPri = this.frag.querySelector<HTMLButtonElement>("button[data-for='lower-priority']")!;
-        this.btnDelete   = this.frag.querySelector<HTMLButtonElement>("button[data-for='delete']")!;
-        this.isUpdated   = false;
+        this.frag       = parseHTML(htmlEditFilterSet);
+        this.divReveal  = this.frag.querySelector<HTMLDivElement>("div.reveal")!;
+        this.tbody      = this.frag.querySelector<HTMLTableSectionElement>("table > tbody")!;
+        this.tmplRow    = this.frag.querySelector<HTMLTemplateElement>("template[data-for='row']")!;
+        this.btnRaise   = this.frag.querySelector<HTMLButtonElement>("button[data-for='raise-priority']")!;
+        this.btnLower   = this.frag.querySelector<HTMLButtonElement>("button[data-for='lower-priority']")!;
+        this.btnDelete  = this.frag.querySelector<HTMLButtonElement>("button[data-for='delete']")!;
+        this.isModified = false;
 
         this.selectedRuleBus = new Bacon.Bus<FilterRuleID|null>();
         this.selectedRule    = this.selectedRuleBus.toProperty(null);
         this.selectedRule.onValue(sel => this.highlight(sel));
 
+        this.ruleSetModifiedBus = new Bacon.Bus<null>();
+        this.ruleSetModifiedBus.onValue(() => {
+            this.isModified = true;
+        });
+
         /* The "Raise the priority" button is enabled when a rule is
          * selected and it's not the most prioritized rule. */
-        this.selectedRule.onValue(async sel => {
-            this.btnRaisePri.disabled =
-                !sel || await this.indexOf(sel) == 0;
+        this.selectedRule
+            .toEventStream()
+            .merge(this.selectedRule.sampledBy(this.ruleSetModifiedBus))
+            .onValue(async sel => {
+                this.btnRaise.disabled =
+                    !sel || await this.indexOf(sel) == 0;
+            });
+        const raiseClicked = Bacon.fromEvent(this.btnRaise, "click");
+        this.selectedRule.sampledBy(raiseClicked).onValue(async sel => {
+            if (sel) {
+                await this.onRaisePriority(sel);
+            }
         });
 
         /* The "Lower the priority" button is enabled when a rule is
          * selected and it's not the least prioritized rule. */
-        this.selectedRule.onValue(async sel => {
-            this.btnLowerPri.disabled =
+        this.selectedRule
+            .toEventStream()
+            .merge(this.selectedRule.sampledBy(this.ruleSetModifiedBus))
+            .onValue(async sel => {
+            this.btnLower.disabled =
                 !sel || await this.indexOf(sel) == await this.filterRules!.count() - 1;
+        });
+        const lowerClicked = Bacon.fromEvent(this.btnLower, "click");
+        this.selectedRule.sampledBy(lowerClicked).onValue(async sel => {
+            if (sel) {
+                await this.onLowerPriority(sel);
+            }
         });
 
         /* The "Delete the rule" button is enabled when a rule is
@@ -66,15 +95,21 @@ class EditFilterSetView {
         this.selectedRule.onValue(sel => {
             this.btnDelete.disabled = sel == null;
         });
+        const deleteClicked = Bacon.fromEvent(this.btnDelete, "click");
+        this.selectedRule.sampledBy(deleteClicked).onValue(async sel => {
+            if (sel) {
+                await this.onDelete(sel);
+            }
+        });
 
         // Foundation uses jQuery events as opposed to the native DOM
         // events.
         $(this.divReveal).on("closed.zf.reveal", () => {
             if (this.onClose) {
-                this.onClose(this.isUpdated);
+                this.onClose(this.isModified);
                 delete this.onClose;
             }
-            this.isUpdated = false;
+            this.isModified = false;
         });
     }
 
@@ -89,10 +124,20 @@ class EditFilterSetView {
         }
     }
 
-    public async open(filterRules: FilterRuleSet, onClose: (isUpdated: boolean) => void): Promise<void> {
+    private async ruleAt(index: number): Promise<FilterRule> {
+        const rules = await this.filterRules!.toArray();
+        if (index >= 0 && index < rules.length) {
+            return rules[index];
+        }
+        else {
+            throw new Error(`Index out of bounds: ${index}`);
+        }
+    }
+
+    public async open(filterRules: FilterRuleSet, onClose: (isModified: boolean) => void): Promise<void> {
         this.filterRules = filterRules;
         this.onClose     = onClose;
-        this.isUpdated   = false;
+        this.isModified  = false;
 
         await this.refreshRules();
         this.selectedRuleBus.push(null);
@@ -109,9 +154,7 @@ class EditFilterSetView {
     }
 
     private async refreshRules(): Promise<void> {
-        while (this.tbody.firstChild) {
-            this.tbody.removeChild(this.tbody.firstChild);
-        }
+        this.tbody.replaceChildren();
         for (const rule of await this.filterRules!.toArray()) {
             /* For whatever reason, Node#cloneNode() returns Node, not
              * polymorphic this. Isn't this a bug? */
@@ -131,17 +174,13 @@ class EditFilterSetView {
             const tmplAction = rule.action === FilterAction.Show ?
                 spanAction.querySelector<HTMLTemplateElement>("template[data-for='show']")! :
                 spanAction.querySelector<HTMLTemplateElement>("template[data-for='hide']")!;
-            while (spanAction.firstChild) { // Remove templates
-                spanAction.removeChild(spanAction.firstChild);
-            }
+            spanAction.replaceChildren(); // Remove templates
             spanAction.appendChild(tmplAction.content);
 
             const spanSubject = colRule.querySelector<HTMLSpanElement>("span[data-for='subject']")!;
             const tmplUser    = spanSubject.querySelector<HTMLTemplateElement>("template[data-for='user']")!;
             const tmplAny     = spanSubject.querySelector<HTMLTemplateElement>("template[data-for='any']")!;
-            while (spanSubject.firstChild) { // Remove templates
-                spanSubject.removeChild(spanSubject.firstChild);
-            }
+            spanSubject.replaceChildren(); // Remove templates
             if (rule.subject) {
                 const frag     = tmplUser.content;
 
@@ -164,18 +203,14 @@ class EditFilterSetView {
             const tmplActivity = rule.activity ?
                 spanActivity.querySelector<HTMLTemplateElement>(`template[data-for='${rule.activity}']`)! :
                 spanActivity.querySelector<HTMLTemplateElement>("template[data-for='any']")!;
-            while (spanActivity.firstChild) { // Remove templates
-                spanActivity.removeChild(spanActivity.firstChild);
-            }
+            spanActivity.replaceChildren(); // Remove templates
             spanActivity.appendChild(tmplActivity.content);
 
             const spanObjectType = colRule.querySelector<HTMLSpanElement>("span[data-for='object-type']")!;
             const tmplObjectType = rule.object ?
                 spanObjectType.querySelector<HTMLTemplateElement>(`template[data-for='${rule.object}']`)! :
                 spanObjectType.querySelector<HTMLTemplateElement>("template[data-for='any']")!;
-            while (spanObjectType.firstChild) { // Remove templates
-                spanObjectType.removeChild(spanObjectType.firstChild);
-            }
+            spanObjectType.replaceChildren(); // Remove templates
             spanObjectType.appendChild(tmplObjectType.content);
 
             // #Fired
@@ -199,6 +234,77 @@ class EditFilterSetView {
                 tr.classList.remove("bnr-selected");
             }
         }
+    }
+
+    private async onRaisePriority(ruleID: FilterRuleID) {
+        const thisIndex = await this.indexOf(ruleID);
+        const prevRule  = await this.ruleAt(thisIndex - 1);
+        this.swap(ruleID, prevRule.id);
+    }
+
+    private async onLowerPriority(ruleID: FilterRuleID) {
+        const thisIndex = await this.indexOf(ruleID);
+        const nextRule  = await this.ruleAt(thisIndex + 1);
+        this.swap(ruleID, nextRule.id);
+    }
+
+    private async swap(idA: FilterRuleID, idB: FilterRuleID) {
+        /* Swap priorities in the database. */
+        await this.filterRules!.swap(idA, idB);
+
+        /* Swap rules in the view. */
+        let trA: Element|undefined;
+        let trB: Element|undefined;
+        for (const tr of this.tbody.querySelectorAll("tr")) {
+            if (tr.dataset.id) {
+                if (tr.dataset.id == idA) {
+                    trA = tr;
+                }
+                else if (tr.dataset.id == idB) {
+                    trB = tr;
+                }
+            }
+        }
+        if (!trA || !trB) {
+            throw new Error("internal error");
+        }
+
+        const prevA = trA.previousSibling;
+        const prevB = trB.previousSibling;
+        trA.parentNode!.removeChild(trA);
+        trB.parentNode!.removeChild(trB);
+
+        if (prevA) {
+            prevA.after(trB);
+        }
+        else {
+            this.tbody.prepend(trB);
+        }
+
+        if (prevB) {
+            prevB.after(trA);
+        }
+        else {
+            this.tbody.prepend(trA);
+        }
+
+        /* Notify that the set of rules has been modified. */
+        this.ruleSetModifiedBus.push(null);
+    }
+
+    private async onDelete(id: FilterRuleID) {
+        /* Remove it from the database. */
+        await this.filterRules!.remove(id);
+
+        /* Remove it from the view. */
+        const tr = this.tbody.querySelector(`tr[data-id='${id}']`)!;
+        tr.parentNode!.removeChild(tr);
+
+        /* Deselect the rule. */
+        this.selectedRuleBus.push(null);
+
+        /* Notify that the set of rules has been modified. */
+        this.ruleSetModifiedBus.push(null);
     }
 }
 
