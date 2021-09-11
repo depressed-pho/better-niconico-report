@@ -18,6 +18,7 @@ export class ConfigView {
     private readonly valPollingInterval: HTMLElement;
     private readonly slidFetchDelay: HTMLInputElement;
     private readonly valFetchDelay: HTMLElement;
+    private readonly aToggleAdvanced: HTMLAnchorElement;
     private readonly btnResetToDefault: HTMLButtonElement;
 
     public constructor(model: ConfigModel, ctx = document) {
@@ -27,6 +28,7 @@ export class ConfigView {
         this.valPollingInterval  = ctx.querySelector<HTMLElement>("#polling-interval-value")!;
         this.slidFetchDelay      = ctx.querySelector<HTMLInputElement>("#fetch-delay-slider")!;
         this.valFetchDelay       = ctx.querySelector<HTMLElement>("#fetch-delay-value")!;
+        this.aToggleAdvanced     = ctx.querySelector<HTMLAnchorElement>("#toggle-advanced")!;
         this.btnResetToDefault   = ctx.querySelector<HTMLButtonElement>("#reset-to-default")!;
 
         /* Setup the polling interval slider. We need to reinterpret
@@ -106,6 +108,14 @@ export class ConfigView {
             })
             .onValue(x => this.slidFetchDelay.valueAsNumber = x);
 
+        /* Advanced settings are initially hidden, and will be shown
+         * when the user clicks its legend.
+         */
+        Bacon.fromEvent(this.aToggleAdvanced, "click")
+            .onValue(() => {
+                toggleFieldsetVisibility(this.aToggleAdvanced);
+            });
+
         // The reset button is nothing special.
         Bacon.fromEvent(this.btnResetToDefault, "click")
             .onValue(() => this.model.resetToDefault());
@@ -126,4 +136,41 @@ function exponentialToLinear(value: number, min: number, max: number): number {
     const logMax   = Math.log(max  ) / Math.log(logBase);
     const logValue = Math.log(value) / Math.log(logBase);
     return (logValue - 1) / (logMax - 1);
+}
+
+function toggleFieldsetVisibility(notch: HTMLAnchorElement) {
+    // Find the fieldset the notch corresponds to.
+    const fieldset = (() => {
+        for (let elem = notch.parentElement; elem; elem = elem.parentElement) {
+            if (elem.localName == "fieldset") {
+                return elem;
+            }
+        }
+    })();
+
+    // Is it shown?
+    if (fieldset!.classList.contains("bnr-hidden-fieldset")) {
+        // No. Show it.
+        fieldset!.classList.remove("bnr-hidden-fieldset");
+        for (const caret of notch.querySelectorAll("i")) {
+            if (caret.dataset.for == "hidden") {
+                caret.classList.add("hide");
+            }
+            else if (caret.dataset.for == "shown") {
+                caret.classList.remove("hide");
+            }
+        }
+    }
+    else {
+        // Yes. Hide it.
+        fieldset!.classList.add("bnr-hidden-fieldset");
+        for (const caret of notch.querySelectorAll("i")) {
+            if (caret.dataset.for == "hidden") {
+                caret.classList.remove("hide");
+            }
+            else if (caret.dataset.for == "shown") {
+                caret.classList.add("hide");
+            }
+        }
+    }
 }

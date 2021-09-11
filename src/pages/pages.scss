@@ -1,6 +1,10 @@
+/* NOTE: Until Foundation migrates from @import to @use, we have to
+ * live with giant chunks of CSS produced for each entry point.
+ */
 @import "_settings.scss";
 @import "~foundation-sites/scss/foundation.scss";
 @import "~@icon/foundation-icons/foundation-icons.css";
+@import "~@icon/icofont/icofont.css";
 @import "~motion-ui/src/motion-ui.scss";
 
 // Global styles
@@ -21,6 +25,7 @@
 //@include foundation-progress-bar;
 @include foundation-progress-element;
 //@include foundation-slider;
+@include foundation-range-input;
 //@include foundation-switch;
 @include foundation-table;
 

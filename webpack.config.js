@@ -109,7 +109,7 @@ module.exports = (env, argv) => {
             rules: [
                 { test: /\.tsx?$/, loader: 'ts-loader' },
                 {
-                    test: /\.(eot|svg|ttf|woff)$/i,
+                    test: /\.(eot|svg|ttf|woff2?)$/i,
                     type: 'asset/resource'
                 },
                 {
