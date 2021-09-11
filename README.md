@@ -36,12 +36,20 @@ Features include:
 
 # Installation
 
-The addon is not complete yet. When it's ready it'll be distributed as
-an xpi file.
+This addon is not listed in AMO. You can find a signed xpi file in the
+"Releases" page.
 
 # Building
 
-TODO
+```
+% npm install # You only need to do this once
+% npm run build
+```
+
+This will create an unsigned .zip archive in
+`./dist/web-ext-artifacts`. Alternatively, by running `npm run watch`
+you can also launch Firefox with a temporary profile with the addon
+installed.
 
 # License
 
