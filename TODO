@@ -4,6 +4,7 @@
   We couldn't use Foundation.Dropdown because it really hates when we
   try to initialize it before attaching elements to DOM. This means we
   have to reinvent the wheel and we don't think it's worth it.
+* TODO [#B] Let days to expire be configurable
 * TODO [#C] Would be nice if the rule set editor supported drag and drop to reorder rules
 * DONE [#A] Configuration panel
 * DONE [#A] Automatic update should be able to be disabled

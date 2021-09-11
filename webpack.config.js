@@ -1,3 +1,4 @@
+const pkg = require("./package.json");
 const path = require("path");
 const { merge } = require('webpack-merge');
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
@@ -100,6 +101,8 @@ module.exports = (env, argv) => {
                 ]
             }),
             new WebExtPlugin({
+                buildPackage: true,
+                outputFilename: `${pkg.name}-${pkg.version}.zip`,
                 sourceDir: path.resolve(__dirname, "dist"),
                 browserConsole: false,
                 firefox: firefoxBin
