@@ -1,9 +1,9 @@
 # -*- org -*-
 
-* TODO [#A] Configuration panel
 * TODO [#B] Hover on a thumbnail to show a bigger image
-* TODO [#A] Automatic update should be able to be disabled
 * TODO [#C] Would be nice if the rule set editor supported drag and drop to reorder rules
+* DONE [#A] Configuration panel
+* DONE [#A] Automatic update should be able to be disabled
 * DONE [#A] Filtering
 * DONE [#A] Reload button on the top bar
 * DONE [#A] Purge old entries both from the database and the page

@@ -14,13 +14,19 @@ h1 {
         cursor: pointer;
     }
     li:hover {
-        @extend .is-active;
+        @extend .is-active !optional;
     }
 }
 .top-bar .menu {
     .fi {
         font-size: 150%;
     }
+}
+
+/* A workaround for a possible bug in foundation-sites@6.7.1:
+   .menu.align-right has no effect without this: */
+.menu.align-right {
+    justify-content: flex-end;
 }
 
 @mixin bnr-default-anchor($text-decoration: underline) {

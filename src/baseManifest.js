@@ -12,6 +12,9 @@ module.exports = {
         "default_icon": "assets/icon.svg",
         "default_title": "Better Niconico Report"
     },
+    options_ui: {
+        "page": "assets/pages/config/config.html"
+    },
     permissions: [
         // To perform an authentication and also follow a redirection
         // on a failed authentication.

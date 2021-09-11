@@ -43,11 +43,11 @@ $object-thumb-height: 63px;
 /* TODO: These should be customizable, i.e. these styles should be
    dynamically generated and applied. */
 .card {
-    @function bnr-activity-bg-color($hue, $saturation: 20, $lightness: 95) {
+    @function bnr-activity-bg-color($hue, $saturation: 20%, $lightness: 95%) {
         @return hsl($hue, $saturation, $lightness);
     }
 
-    @function bnr-activity-fg-color($hue, $saturation: 60, $lightness: 50) {
+    @function bnr-activity-fg-color($hue, $saturation: 60%, $lightness: 50%) {
         @return hsl($hue, $saturation, $lightness);
     }
 
@@ -61,9 +61,9 @@ $object-thumb-height: 63px;
         }
     }
     &.bnr-activity-broadcast {
-        background-color: bnr-activity-bg-color(25, $lightness: 91);
+        background-color: bnr-activity-bg-color(25, $lightness: 91%);
         .bnr-report-title {
-            color: bnr-activity-fg-color(25, $lightness: 46);
+            color: bnr-activity-fg-color(25, $lightness: 46%);
             font-weight: bold;
         }
     }
@@ -74,9 +74,9 @@ $object-thumb-height: 63px;
         background-color: bnr-activity-bg-color(64);
     }
     &.bnr-activity-upload {
-        background-color: bnr-activity-bg-color(0, $saturation: 80);
+        background-color: bnr-activity-bg-color(0, $saturation: 80%);
         .bnr-report-title {
-            color: bnr-activity-fg-color(0, $lightness: 46);
+            color: bnr-activity-fg-color(0, $lightness: 46%);
             font-weight: bold;
         }
     }

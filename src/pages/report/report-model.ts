@@ -119,14 +119,19 @@ export class ReportModel {
                     const intervalStartedAt = Date.now();
                     const interval =
                         Bacon.mergeAll([
-                            this.config.intervalBetweenPolling,
+                            this.config.pollingInterval,
                             this.updateRequested.map(() => 0)
                         ]).flatMap(delay => {
-                            const delayedSoFar = Date.now() - intervalStartedAt;
-                            const remaining    = Math.max(0, delay * 1000 - delayedSoFar);
-                            console.debug(
-                                "We are going to poll the server for updates after %f seconds.", remaining / 1000);
-                            return Bacon.later(remaining, null);
+                            if (delay) {
+                                const delayedSoFar = Date.now() - intervalStartedAt;
+                                const remaining    = Math.max(0, delay * 1000 - delayedSoFar);
+                                console.debug(
+                                    "We are going to poll the server for updates after %f seconds.", remaining / 1000);
+                                return Bacon.later(remaining, null);
+                            }
+                            else {
+                                return Bacon.never();
+                            }
                         });
                     return interval.first().flatMap(() => this.fetchFromServer());
             }
@@ -312,7 +317,7 @@ export class ReportModel {
                         // in the interval.
                         const intervalStartedAt = Date.now();
                         const interval =
-                            this.config.delayBetweenConsecutiveFetch
+                            this.config.fetchDelay
                                 .flatMap(delay => {
                                     const delayedSoFar = Date.now() - intervalStartedAt;
                                     const remaining    = Math.max(0, delay * 1000 - delayedSoFar);

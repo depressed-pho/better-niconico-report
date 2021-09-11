@@ -17,7 +17,7 @@ import { signIn } from '../sign-in/sign-in';
  * a controller in the MVC sense.
  */
 
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener("DOMContentLoaded", async () => {
     $(document).foundation();
 
     const configModel = new ConfigModel();
@@ -27,7 +27,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     /* Setup handlers for UI events from ReportView. */
     reportView.updateRequested.onValue(() => reportModel.checkForUpdates());
-    reportView.editPrefsRequested.onValue(() => console.log("FIXME: edit prefs"));
+    reportView.editPrefsRequested.onValue(async () => await browser.runtime.openOptionsPage());
     reportView.refreshRequested.onValue(async () => await reportModel.refresh());
     reportView.signOutRequested.onValue(async () => {
         await signOut();

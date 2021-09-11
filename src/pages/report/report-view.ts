@@ -52,8 +52,8 @@ export class ReportView {
     private reportInsertionPoint?: Element;
 
     public constructor(ctx = document) {
-        const topBar          = document.querySelector<HTMLDivElement>("div.top-bar")!;
-        this.btnUpdate        = document.querySelector<HTMLButtonElement>("button[data-for='check-for-updates']")!;
+        const topBar          = ctx.querySelector<HTMLDivElement>("div.top-bar")!;
+        this.btnUpdate        = ctx.querySelector<HTMLButtonElement>("button[data-for='check-for-updates']")!;
         this.updateRequested  = Bacon.fromEvent(this.btnUpdate, "click").map(Bacon.constant(null));
         const menuCtrl        = topBar.querySelector<HTMLElement>(".menu[data-for='control']")!;
         const miEditFilterSet = menuCtrl.querySelector<HTMLAnchorElement>("a[data-for='edit-filter-set']")!;

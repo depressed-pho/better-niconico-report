@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?><!-- -*- nxml -*- -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Preferences :: Better Niconico Report</title>
+    <link rel="icon" href="/assets/icon.svg" />
+    <link rel="stylesheet" href="config.css" />
+    <script type="text/javascript" src="config.js"></script>
+  </head>
+  <body>
+    <form>
+      <div class="grid-container">
+        <div class="grid-y">
+          <!-- Row: slider label -->
+          <div class="cell">
+            <label for="polling-interval-slider">
+              Interval between automatic updates:
+            </label>
+          </div>
+          <!-- Row: slider -->
+          <div class="cell grid-x grid-margin-x">
+            <div class="cell small-9">
+              <input id="polling-interval-slider" type="range" min="0" max="1" step="any"
+                     aria-describedby="polling-interval-help-text" />
+            </div>
+            <div class="cell small-3 bnr-vertical-center-container">
+              <div class="bnr-vertical-center" id="polling-interval-value"
+                   data-disabled-label="disabled"></div>
+            </div>
+          </div>
+          <!-- Row: slider help text -->
+          <div class="cell">
+            <p class="help-text" id="polling-interval-help-text">
+              Setting it to the maximum disables automatic updates.
+            </p>
+          </div>
+          <!-- Row: Advanced settings -->
+          <div class="cell">
+            <fieldset class="fieldset">
+              <legend>
+                <a>
+                  <i class="fi fi-unlock"></i>
+                  Advanced settings
+                </a>
+              </legend>
+              <p class="help-text">
+                You usually don't need to change these.
+              </p>
+              <div class="grid-y">
+                <div class="cell">
+                  <label for="fetch-delay-slider">
+                    Delay between each consecutive fetch from server:
+                  </label>
+                </div>
+                <div class="cell grid-x grid-margin-x">
+                  <div class="cell small-9">
+                    <input id="fetch-delay-slider" type="range" min="0" max="1" step="any" />
+                  </div>
+                  <div class="cell small-3 bnr-vertical-center-container">
+                    <div class="bnr-vertical-center" id="fetch-delay-value"></div>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+          <!-- Row: reset button -->
+          <div class="cell">
+            <ul class="menu align-right">
+              <li>
+                <button type="button" class="button warning" id="reset-to-default">
+                  Reset to the default
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </form>
+  </body>
+</html>

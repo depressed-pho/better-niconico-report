@@ -13,7 +13,7 @@ class SignInView {
     private readonly form: HTMLFormElement;
     private readonly inUser: HTMLInputElement;
     private readonly inPassword: HTMLInputElement;
-    private readonly btnSubmit: HTMLInputElement;
+    private readonly btnSubmit: HTMLButtonElement;
     private readonly divError: HTMLDivElement;
     private onSucceeded?: () => void;
 
@@ -30,7 +30,7 @@ class SignInView {
         this.form       = this.frag.querySelector<HTMLFormElement>("form")!;
         this.inUser     = this.form.querySelector<HTMLInputElement>("input[type='text']")!;
         this.inPassword = this.form.querySelector<HTMLInputElement>("input[type='password']")!;
-        this.btnSubmit  = this.form.querySelector<HTMLInputElement>("input[type='submit']")!;
+        this.btnSubmit  = this.form.querySelector<HTMLButtonElement>("button[type='submit']")!;
         this.divError   = this.form.querySelector<HTMLDivElement>("div.bnr-error")!;
 
         this.divError.style.display = 'none';

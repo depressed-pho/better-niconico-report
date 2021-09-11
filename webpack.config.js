@@ -54,6 +54,10 @@ module.exports = (env, argv) => {
     const common = {
         entry: {
             background: "./src/background.ts",
+            config: {
+                import: "./src/pages/config/config.ts",
+                filename: "assets/pages/[name]/[name].js"
+            },
             report: {
                 import: "./src/pages/report/report.ts",
                 filename: "assets/pages/[name]/[name].js"
