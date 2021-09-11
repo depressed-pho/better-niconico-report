@@ -181,7 +181,7 @@ export class ReportView {
 
         // Setup a Foundation dropdown menu for muting.
         const menuMuting = frag.querySelector<HTMLElement>(".menu.bnr-muting")!;
-        new DropdownMenu($(menuMuting))
+        new DropdownMenu($(menuMuting));
 
         return frag;
     }

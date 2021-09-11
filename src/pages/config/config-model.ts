@@ -66,6 +66,10 @@ export class ConfigModel {
                 case keyFetchDelay:
                     this.fetchDelayBus.push(Number(ev.newValue));
                     break;
+
+                default:
+                    console.info(`Ignoring an unknown storage key: ${ev.key}`);
+                    break;
             }
         });
     }
