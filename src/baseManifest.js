@@ -22,7 +22,7 @@ module.exports = {
         // To follow a redirection on a successful authentication.
         "https://www.nicovideo.jp/*",
         // To access the report API.
-        "https://public.api.nicovideo.jp/*"
+        "https://api.repoline.nicovideo.jp/*"
     ],
     browser_specific_settings: {
         gecko: {

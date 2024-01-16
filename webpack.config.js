@@ -68,7 +68,6 @@ module.exports = (env, argv) => {
             path: path.resolve(__dirname, "dist"),
             assetModuleFilename: "assets/[name][ext]"
         },
-        devtool: "inline-source-map", // Enable sourcemaps for debugging webpack's output.
         resolve: {
             extensions: [".ts", ".js"],
             alias: {

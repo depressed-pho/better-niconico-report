@@ -39,7 +39,7 @@ export interface ReportObject {
 }
 
 export async function getReportChunk(skipDownTo?: ReportID): Promise<ReportChunk> {
-    const URL = "https://public.api.nicovideo.jp/v1/timelines/nicorepo/last-1-month/my/pc/entries.json"
+    const URL = "https://api.repoline.nicovideo.jp/v1/timelines/nicorepo/last-1-month/my/pc/entries.json"
         + (skipDownTo ? `?untilId=${skipDownTo}` : '');
     const res = await fetch(URL, {
         method: "GET",

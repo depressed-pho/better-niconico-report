@@ -8,7 +8,8 @@ export interface Credentials {
 }
 
 export async function signIn(creds: Credentials) {
-    const URL = "https://account.nicovideo.jp/api/v1/login?site=niconico&mail_or_tel=1";
+    // https://account.nicovideo.jp/login/redirector?show_button_twitter=1&site=niconico&show_button_facebook=1&sec=header_pc&next_url=%2F
+    const URL = "https://account.nicovideo.jp/login/redirector?site=niconico&sec=header_pc&next_url=%2F";
     const res = await fetch(URL, {
         method: "POST",
         mode: "cors",
@@ -17,10 +18,8 @@ export async function signIn(creds: Credentials) {
             "Content-Type": "application/x-www-form-urlencoded"
         },
         body: formurlencoded({
-            "current_form": "login_form",
             "mail_tel": creds.user,
-            "password": creds.password,
-            "login__submit": "Login"
+            "password": creds.password
         })
     });
     /* The server wants us to redirect to https://www.nicovideo.jp/ on
