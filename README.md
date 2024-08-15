@@ -1,3 +1,5 @@
+<p style="color: red">This addon has been discontinued. Migrate to <a href="https://github.com/depressed-pho/nicofeed">Nicofeed</a> as a replacement.</p>
+
 # What's this
 
 **Better Niconico Report** is a Firefox addon for providing a better
